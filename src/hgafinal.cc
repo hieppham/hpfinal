@@ -1,9 +1,9 @@
 //============================================================================
-// Name        : hgafinal.cc
+// Name        : hpfinal.cc
 // Author      : Hiep Pham
 // Version     : 1.0
 // Copyright   : (C) 2012 by _HP
-// Description : Main function of HGA Final Project in C++, Ansi-style
+// Description : Main function of HP Final Project in C++, Ansi-style
 //============================================================================
 
 #include "hgafinal.h"
