@@ -2,3 +2,5 @@ CMakeCache.txt
 cmake_install.cmake
 install_manifest.txt
 galib247/
+nbproject/
+build/

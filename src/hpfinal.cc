@@ -6,40 +6,48 @@
 // Description : Main function of HP Final Project in C++, Ansi-style
 //============================================================================
 
-#include "hgafinal.h"
+#include "hpfinal.h"
 #include "cpu_time.c"
 using namespace std;
 
 // global variables
-unsigned int gmVehicles = 1; // number of vehicles
-unsigned int gnCustomers = 1; // number of customers
-unsigned int gtDays = 1; // number of days (PVRP)
 unsigned int numOfDepots = 1;
 int typeOfVRP;
-double maxDuration; // maximum duration of a route
-double maxLoad; // maximum load of a vehicle
-vector<Customer> gArrC; // global variable - array of visitors
+// initialize static variables
+unsigned int HPGV::nCus = 1;
+unsigned int HPGV::mVeh = 1;
+unsigned int HPGV::tDay = 0;
+unsigned int HPGV::nPop = 60;
+unsigned int HPGV::nKeep = 40;
 
-HGAGenome bestSol(0);
+double HPGV::maxDuration = 0;
+double HPGV::maxLoad = 0;
+
+double HPGV::hPenalty = 0;
+double HPGV::avgQ = 0;
+double HPGV::avgD = 0;
+double HPGV::avgW = 0;
+
+double HPGV::bestFeasiblecost = 0;
+
+double HPGV::I1Lambda = 0;
+double HPGV::I1Mu = 0;
+double HPGV::I1Alpha = 0;
+
+long HPGV::utsIter = 80;
+double HPGV::utsLambda = 0.015;
+
+unsigned int HPGV::rvnsIter = 100;
+double HPGV::rvnsPRev = 0.1;
+double HPGV::rvnsTmax = 600;
+
+vector<Customer> gArrC; // global variable - array of visitors
 
 Customer* gDepot;
 Customer* gDynamic;
 double gDynamicStart;
-vector<Route > gRoute;
-RouteData gRouteInfo;
+
 vector<vector<double> > gDistance;
-double sig1 = 0, sig2 = 0;   // coefficients for calculating metrics
-
-// penalty parameters
-double hPenalty = 0;
-double aveQ = 0;
-double aveD = 0;
-double aveW = 0;
-
-double bestFeasibleCost = 0;
-
-unsigned int nPop = 10;
-unsigned int nKeep = 4;
 
 /*
  * ====================================
@@ -54,13 +62,13 @@ int getInputData(fstream &ifs, char* filein) {
     ifs.open(filein, ios::in);
     if (ifs.is_open()) {
         if (ifs.good()) {
-            ifs >> typeOfVRP >> gmVehicles >> gnCustomers >> gtDays >> numOfDepots;
+            ifs >> typeOfVRP >> HPGV::mVeh >> HPGV::nCus >> HPGV::tDay >> numOfDepots;
         }
-        for (unsigned int i = 0; i < gtDays; i++) {
-            ifs >> maxDuration >> maxLoad;
+        for (unsigned int i = 0; i < HPGV::tDay; i++) {
+            ifs >> HPGV::maxDuration >> HPGV::maxLoad;
         }
-        if (maxDuration == 0){
-            maxDuration = 10000;
+        if (HPGV::maxDuration == 0){
+            HPGV::maxLoad = 10000;
         }
         ifs >> tid >> tx >> ty >> td >> tq >> tf >> ta;
         gDepot = new Customer(tid, tx, ty, td, tq, tf, ta);
@@ -69,7 +77,7 @@ int getInputData(fstream &ifs, char* filein) {
         ifs >> te >> tl;
         gDepot->setTime(te, tl);
 
-        while (ifs.good() && gArrC.size() < gnCustomers) {
+        while (ifs.good() && gArrC.size() < HPGV::nCus) {
             tempIter = 0;
             ifs >> tid >> tx >> ty >> td >> tq >> tf >> ta;
             Customer* gCustomer = new Customer(tid, tx, ty, td, tq, tf, ta);
@@ -92,7 +100,28 @@ int getInputData(fstream &ifs, char* filein) {
     return 0;
 }
 
+int getParams(fstream &ifs, char* filein) {
+    ifs.open(filein, ios::in);
+    if (ifs.is_open()) {
+        try {
+            ifs >> HPGV::I1Lambda >> HPGV::I1Mu >> HPGV::I1Alpha;
+            ifs >> HPGV::utsIter >> HPGV::utsLambda;
+            ifs >> HPGV::rvnsIter >> HPGV::rvnsPRev >> HPGV::rvnsTmax;
+            ifs.close();
+        } catch (...) {
+            cerr << "Can not read parameters \"" << filein << "\" from file.\n";
+            exit(1);
+        }
+
+    }else{
+        cerr << "Can not open \"" << filein << "\" for getting parameters.\n";
+        exit(1);
+    }
+    return 0;
+}
+
 int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double totalTime){
+/*
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
@@ -142,7 +171,7 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
         cerr << "Can not open \"" << fileout << "\" for output.\n";
         exit(1);
     }
-
+*/
     return 0;
 }
 
@@ -179,37 +208,38 @@ int main(int argc, char** argv) {
     fstream ofs;
     if (argc < 3) {
         cerr << "Invalid arguments! Please type names of input, settings and output files." << endl;
-        cerr << "Usage:\n hgafinal [input] [settings] [output]" << endl;
+        cerr << "Usage:\n hgafinal [input] [settings] [params] [output]" << endl;
         exit(1);
     } else {
         // read input file
         getInputData(ifs, argv[1]);
-        cacheDistances(gDistance, gArrC, gnCustomers);
-        HGAGenome genome(0);
-        HPGradProjectGA ga(genome);
-        HPGradScaling scaling;
-        HPGradSelector select;
-
-        ga.parameters(argv[2]); // read parameters from settings file
-        nKeep = (int)(ga.populationSize() - ga.nReplacement());
-        nPop = 2*((int)ga.nReplacement()/2);
-        if (nPop > 2){
-            nPop -= 2;
-        }
-        ga.minimize();          // minimize objective function
-        ga.scaling(scaling);
-        ga.selector(select);
-
-        cout << "\nEvolving..." << endl;
-        cpu_time();
-        ga.evolve();
-        double totalTime = cpu_time();
-
-        if (bestFeasibleCost == 0){
-            bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
-        }
-        cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
-        writeOutputData(ofs, argv[3], argv[1], totalTime);
+        getParams(ifs, argv[2]);
+        cacheDistances(gDistance, gArrC, HPGV::nCus);
+//        HGAGenome genome(0);
+//        HPGradProjectGA ga(genome);
+//        HPGradScaling scaling;
+//        HPGradSelector select;
+//
+//        ga.parameters(argv[2]); // read parameters from settings file
+//        nKeep = (int)(ga.populationSize() - ga.nReplacement());
+//        nPop = 2*((int)ga.nReplacement()/2);
+//        if (nPop > 2){
+//            nPop -= 2;
+//        }
+//        ga.minimize();          // minimize objective function
+//        ga.scaling(scaling);
+//        ga.selector(select);
+//
+//        cout << "\nEvolving..." << endl;
+//        cpu_time();
+//        ga.evolve();
+//        double totalTime = cpu_time();
+//
+//        if (bestFeasibleCost == 0){
+//            bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
+//        }
+//        cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
+//        writeOutputData(ofs, argv[3], argv[1], totalTime);
 
         exit(1);
     }
