@@ -47,7 +47,7 @@ Customer* gDepot;
 Customer* gDynamic;
 double gDynamicStart;
 
-vector<vector<double> > gDistance;
+vector<vector<double> > gDistance(1, vector<double>(1));
 
 /*
  * ====================================
@@ -179,13 +179,13 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
  * Here we cache distances between each customer and the others
  * ====================================
  */
-void cacheDistances(vector<vector<double> >& gDistance, vector<Customer>& gArrC, unsigned int n){
+void cacheDistances(vector<vector<double> >& gDistance, vector<Customer>& gArrC){
     unsigned int i = 0;
     unsigned int j = 0;
-    gDistance.resize(n+1);
-    for (i = 0; i < n+1; i++){
-        gDistance[i].resize(n+1);
-        for (j = 0; j < n+1; j++){
+    gDistance.resize(HPGV::nCus+1);
+    for (i = 0; i <= HPGV::nCus; i++){
+        gDistance[i].resize(HPGV::nCus+1);
+        for (j = 0; j <= HPGV::nCus; j++){
             if (i == j){
                 gDistance[i][j] = 0;
             }else{
@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
         // read input file
         getInputData(ifs, argv[1]);
         getParams(ifs, argv[2]);
-        cacheDistances(gDistance, gArrC, HPGV::nCus);
+        cacheDistances(gDistance, gArrC);
 //        HGAGenome genome(0);
 //        HPGradProjectGA ga(genome);
 //        HPGradScaling scaling;
