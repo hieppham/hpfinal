@@ -215,30 +215,30 @@ int main(int argc, char** argv) {
         getInputData(ifs, argv[1]);
         getParams(ifs, argv[2]);
         cacheDistances(gDistance, gArrC);
-//        HGAGenome genome(0);
-//        HPGradProjectGA ga(genome);
+        HGAGenome genome(0);
+        HPGradProjectGA ga(genome);
 //        HPGradScaling scaling;
 //        HPGradSelector select;
 //
-//        ga.parameters(argv[2]); // read parameters from settings file
-//        nKeep = (int)(ga.populationSize() - ga.nReplacement());
-//        nPop = 2*((int)ga.nReplacement()/2);
-//        if (nPop > 2){
-//            nPop -= 2;
-//        }
-//        ga.minimize();          // minimize objective function
+        ga.parameters(argv[2]); // read parameters from settings file
+        HPGV::nKeep = (int)(ga.populationSize() - ga.nReplacement());
+        HPGV::nPop = 2*((int)ga.nReplacement()/2);
+        if (HPGV::nPop > 2){
+            HPGV::nPop -= 2;
+        }
+        ga.minimize();          // minimize objective function
 //        ga.scaling(scaling);
 //        ga.selector(select);
 //
-//        cout << "\nEvolving..." << endl;
-//        cpu_time();
-//        ga.evolve();
-//        double totalTime = cpu_time();
+        cout << "\nEvolving..." << endl;
+        cpu_time();
+        ga.evolve();
+        double totalTime = cpu_time();
 //
 //        if (bestFeasibleCost == 0){
 //            bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
 //        }
-//        cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
+        cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
 //        writeOutputData(ofs, argv[3], argv[1], totalTime);
 
         exit(1);
