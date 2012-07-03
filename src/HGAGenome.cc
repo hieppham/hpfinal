@@ -7,49 +7,31 @@
 
 #include "HGAGenome.h"
 
-HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
-    evaluator(Evaluator);
-    crossover(Crossover);
-    durationCost = initCost;
-}
-HGAGenome::~HGAGenome() {
-    // TODO Auto-generated destructor stub
-}
-
-void HGAGenome::copy(const GAGenome& g) {
-    if (&g != this && sameClass(g)) {
-        GAGenome::copy(g); // copy the base class part
-        HGAGenome & hgenome = (HGAGenome &)g;
-        m_route = hgenome.m_route;
-
-        m_pattern = hgenome.m_pattern;
-        m_tour = hgenome.m_tour;
-
-        durationCost = hgenome.durationCost;
-        isFeasible = hgenome.isFeasible;
-        totalTimeVio = hgenome.totalTimeVio;
-        totalCapacityVio = hgenome.totalCapacityVio;
-        totalDurationVio = hgenome.totalDurationVio;
-    }
-}
-
-GAGenome*
-HGAGenome::clone(GAGenome::CloneMethod) const {
-    return new HGAGenome(*this);
-}
-
-int HGAGenome::write(ostream & os) const {
-    os << durationCost << "\n";
-    return os.fail() ? 1 : 0;
-}
-
+extern vector<Customer> gArrC;
+extern vector<vector<double> > gDistance;
 /**
  * Initialize genome
  */
 void HGAGenome::Initializer(GAGenome& g) {
+    unsigned int ic = 1; // index of customer
     // TODO: complete code here.
-    cout << "Init" << endl;
-    exit(1);
+    HGAGenome & hg = (HGAGenome &) g;
+    vector<Customer*> refArr;
+    refArr.resize(HPGV::nCus);
+    hg.arrC = gArrC;
+    hg.m_route.resize(HPGV::numRoute);
+    hg.m_data.resize(HPGV::numRoute);
+    for (ic = 0; ic < HPGV::nCus; ++ic) {
+        int idx = GARandomInt(0, hg.arrC[ic].a - 1);
+        hg.arrC[ic].randomAssignedPattern(idx);
+        refArr[ic] = &(hg.arrC[ic]);
+    }
+    int randType = GARandomInt(1, 3);
+    if (randType == 1){
+        hg.clusterFirstInit(refArr);
+    }else{
+        hg.SolomonTONNInit(refArr);
+    }
 }
 
 float HGAGenome::Evaluator(GAGenome& g) {

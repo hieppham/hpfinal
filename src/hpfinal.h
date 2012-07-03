@@ -39,6 +39,7 @@ public:
     static unsigned int nCus;    // number of customers
     static unsigned int mVeh;    // number of vehicles
     static unsigned int tDay;    // number of days in planning horizontal
+    static unsigned int numRoute;   // pre-calculate number of routes
 
     static double maxDuration;  // maximum duration of a route
     static double maxLoad;      // maximum load of a vehicle

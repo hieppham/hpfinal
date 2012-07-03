@@ -58,6 +58,9 @@ public:
     static int exploitationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
     static int Education(const GAGenome&, const int);
 public:
+    void clusterFirstInit(vector<Customer*>&);
+    void SolomonTONNInit(vector<Customer*>&);
+public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {
         copy(orig);
@@ -80,7 +83,7 @@ public:
     double totalDurationVio;
 
     RouteData m_data;
-    // vector<Customer> arrC;
+    vector<Customer> arrC;
     vector<Route> m_route;
     vector<int> m_pattern;
     cusinday m_tour;

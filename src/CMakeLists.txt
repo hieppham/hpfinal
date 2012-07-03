@@ -33,7 +33,7 @@ SET(CMAKE_CXX_FLAGS "${STD_FLAG} ${PEDANTIC_FLAG} ${DEBUG_FLAG} -I${GALIB_DIR}" 
 
 # Executable binary rrv-visualize
 ADD_EXECUTABLE(hpfinal
-  hpfinal.cc Customer.cc RouteInfo.cc HGAGenome.cc HPGradProjectGA.cc)
+  hpfinal.cc Customer.cc RouteInfo.cc HGAGenome.cc init.cc BaseOp.cc HPGradProjectGA.cc)
 TARGET_LINK_LIBRARIES(hpfinal ${GALIB})
 
 #TARGET_LINK_LIBRARIES(rrv-visualize rrv)

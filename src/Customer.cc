@@ -37,11 +37,7 @@ void Customer::setTime(int te, int tl){
     this->l = tl;
 }
 void Customer::randomAssignedPattern(int idx){
-    if (idx == 0){
-        this->pattern = 0;
-    }else{
-        this->pattern = this->comb[(idx % this->a)];
-    }
+    this->pattern = this->comb[idx];
 }
 Customer::~Customer() {
     // TODO Auto-generated destructor stub

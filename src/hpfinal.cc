@@ -17,6 +17,7 @@ int typeOfVRP;
 unsigned int HPGV::nCus = 1;
 unsigned int HPGV::mVeh = 1;
 unsigned int HPGV::tDay = 0;
+unsigned int HPGV::numRoute = 0;
 unsigned int HPGV::nPop = 60;
 unsigned int HPGV::nKeep = 40;
 
@@ -64,6 +65,7 @@ int getInputData(fstream &ifs, char* filein) {
         if (ifs.good()) {
             ifs >> typeOfVRP >> HPGV::mVeh >> HPGV::nCus >> HPGV::tDay >> numOfDepots;
         }
+        HPGV::numRoute = HPGV::tDay * HPGV::mVeh;
         for (unsigned int i = 0; i < HPGV::tDay; i++) {
             ifs >> HPGV::maxDuration >> HPGV::maxLoad;
         }
