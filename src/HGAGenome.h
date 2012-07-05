@@ -60,6 +60,7 @@ public:
 public:
     void clusterFirstInit(vector<Customer*>&);
     void SolomonTONNInit(vector<Customer*>&);
+    static void initRouting(Route&, vector<Customer*>&, RinfoPtr&);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {

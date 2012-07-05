@@ -27,7 +27,9 @@ void HGAGenome::Initializer(GAGenome& g) {
         refArr[ic] = &(hg.arrC[ic]);
     }
     int randType = GARandomInt(1, 3);
-    if (randType == 1){
+//    if (randType == 1){
+    // TODO: debug here
+    if (randType > 0){
         hg.clusterFirstInit(refArr);
     }else{
         hg.SolomonTONNInit(refArr);
