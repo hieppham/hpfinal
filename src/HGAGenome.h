@@ -44,6 +44,8 @@ typedef std::vector<RinfoPtr> RouteData;
 typedef boost::shared_ptr<Vertex> VertexPtr;
 typedef std::list<VertexPtr> Route;
 
+typedef vector<Customer*> VCus;
+
 class HGAGenome: public GAGenome {
 public:
     GADefineIdentity("HGAGenome", 251);
@@ -58,9 +60,12 @@ public:
     static int exploitationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
     static int Education(const GAGenome&, const int);
 public:
-    void clusterFirstInit(vector<Customer*>&);
-    void SolomonTONNInit(vector<Customer*>&);
-    static void initRouting(Route&, vector<Customer*>&, RinfoPtr&);
+    void clusterFirstInit(VCus&);
+    void SolomonTONNInit(VCus&);
+    static void initRouting(unsigned int&, Route&, VCus&, RinfoPtr&);
+
+    static void pushbackRoute(Route&, RinfoPtr&, Customer*);
+    static void SolomonI1(Route&, RinfoPtr&, VCus&);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {
