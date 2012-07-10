@@ -27,6 +27,8 @@
 #define max(a,b) (a>b)?a:b;
 #define min(a,b) (a<b)?a:b;
 
+const double NEGINF = -1000000;
+
 inline double distance(Customer* c1, Customer* c2){
     double dx = c1->x - c2->x;
     double dy = c1->y - c2->y;

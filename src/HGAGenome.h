@@ -65,6 +65,7 @@ public:
     static void initRouting(unsigned int&, Route&, VCus&, RinfoPtr&);
 
     static void pushbackRoute(Route&, RinfoPtr&, Customer*);
+    static void insertIntoRoute(Route&, RinfoPtr&, Customer*, unsigned int&);
     static void SolomonI1(Route&, RinfoPtr&, VCus&);
 public:
     HGAGenome(int);

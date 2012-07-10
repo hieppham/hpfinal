@@ -41,6 +41,8 @@ void HGAGenome::initRouting(unsigned int& iDay, Route& mRoute, VCus& mCluster, R
 
     // sequentially add remaining customers
     HGAGenome::SolomonI1(mRoute, mRinfo, mCluster);
+    // All routes have been initialized, so we should check if any customer left
+    VCus remainClus(0);
 }
 /**
  * Initialize solution using "cluster first - route second"
