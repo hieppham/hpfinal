@@ -28,6 +28,8 @@
 #define min(a,b) (a<b)?a:b;
 
 const double NEGINF = -1000000;
+const double POSINF = 1000000;
+const unsigned int VERYLAST = 1000;
 
 inline double distance(Customer* c1, Customer* c2){
     double dx = c1->x - c2->x;
@@ -63,6 +65,9 @@ public:
     static double I1Mu;
     static double I1Alpha;
 
+    // Solomon Time-Oriented, Nearest-Neighbor heuristic
+    static double SGamma2;
+    static double SGamma3;
     // Tabu search parameters
     static long utsIter;
     static double utsLambda;
@@ -73,19 +78,18 @@ public:
     static double rvnsTmax;
 };
 
-//inline double metric(
-//        Customer* c1,
-//        Customer* c2,
-//        double firstBegin,           // start time of first customer
-//        double sig1, double sig2,      // weighted coefficients
-//        vector<vector<double> >& gDistance
-//        ){
-//    double tmp = firstBegin + c1->d + gDistance[c1->id][c2->id];
-//    double secondBegin = (tmp > c2->e) ? tmp : c2->e;
-//    double T = secondBegin - (firstBegin + c1->d);
-//    tmp = (double)c2->l - tmp;
-//    return ((1-sig1-sig2)*gDistance[c1->id][c2->id] + sig1*T + sig2*tmp);
-//}
+inline double metric(
+        Customer* c1,
+        Customer* c2,
+        double firstBegin,           // start time of first customer
+        vector<vector<double> >& gDistance
+        ){
+    double tmp = firstBegin + c1->d + gDistance[c1->id][c2->id];
+    double secondBegin = (tmp > c2->e) ? tmp : c2->e;
+    double T = secondBegin - (firstBegin + c1->d);
+    tmp = (double)c2->l - tmp;
+    return ((1 - HPGV::SGamma2 - HPGV::SGamma3) * gDistance[c1->id][c2->id] + HPGV::SGamma2 * T + HPGV::SGamma3 * tmp);
+}
 
 inline int numberOfSetBits(int i)
 {

@@ -3,6 +3,8 @@
 extern vector<Customer> gArrC;
 extern vector<vector<double> > gDistance;
 extern Customer* gDepot;
+extern Customer* gDynamic;
+extern double gDynamicStart;
 /**
  * compare the angles that 2 customers make with the depot
  * ====================================
@@ -15,11 +17,27 @@ bool compareAngular(const Customer* c1, const Customer* c2) {
 bool compareEndingTime(Customer* c1, Customer* c2) {
     return ((c1->l - c2->l) > 0);
 }
-void HGAGenome::initRouting(unsigned int& iDay, Route& mRoute, VCus& mCluster, RinfoPtr& mRinfo){
-    // TODO: initRouting (treat one route with a cluster of customers)
+/**
+ * compare the metrics from 2 customers to the depot
+ * ====================================
+ */
+bool compareMetric(Customer* c1, Customer* c2) {
+    double firstMetric = metric(gDepot, c1, 0, gDistance);
+    double secondMetric = metric(gDepot, c2, 0, gDistance);
+    return (firstMetric - secondMetric > 0);
+}
+bool compareMetricDynamic(Customer* c1, Customer* c2) {
+    double firstMetric = metric(gDynamic, c1, gDynamicStart, gDistance);
+    double secondeMetric = metric(gDynamic, c2, gDynamicStart, gDistance);
+    return (firstMetric - secondeMetric > 0);
+}
+/**
+ * function initCluster() : begin inserting customers into routes in "cluster first - route second" schema
+ */
+void HGAGenome::initCluster(unsigned int& iDay, Route& mRoute, VCus& mCluster, RinfoPtr& mRinfo){
     // check patterns and remove all customers that should not be visited on current day
     // of course, we also remove all customers that has been satisfied
-    for (VCus::iterator skipCus = mCluster.begin(), endCluster = mCluster.end(); skipCus != endCluster; ++skipCus){
+    for (VCus::iterator skipCus = mCluster.begin(); skipCus != mCluster.end(); ++skipCus){
         if ((*skipCus)->isServiced) {
             mCluster.erase(skipCus);
             skipCus--;
@@ -41,14 +59,48 @@ void HGAGenome::initRouting(unsigned int& iDay, Route& mRoute, VCus& mCluster, R
 
     // sequentially add remaining customers
     HGAGenome::SolomonI1(mRoute, mRinfo, mCluster);
-    // All routes have been initialized, so we should check if any customer left
-    VCus remainClus(0);
+}
+/**
+ * function initSolomon()
+ */
+void HGAGenome::initSolomon(unsigned int& iDay, Route& mRoute, VCus& mArr, RinfoPtr& mRinfo){
+    if (mArr.empty()){
+        // all customers have been serviced that day
+        return;
+    }
+    // TODO: initSolomon() - start route
+    // start new route, so we find the "closest" customer to the depot
+    sort(mArr.begin(), mArr.end(), compareEndingTime);
+
+    HGAGenome::pushbackRoute(mRoute, mRinfo, mArr.back());
+    mArr.back()->checkServiced();
+    mArr.pop_back();
+
+    while(1){
+        gDynamic = mRoute.back()->cus;
+        gDynamicStart = mRoute.back()->timeStartService;
+        if (mArr.empty()){
+            break;
+        }
+        sort(mArr.begin(), mArr.end(), compareMetricDynamic);
+        double newDuration = mRinfo->cost + gDistance[gDynamic->id][mArr.back()->id];
+        double newStartTime = mRoute.back()->timeDeparture + gDistance[gDynamic->id][mArr.back()->id];
+        int newLoad = mRinfo->load + mArr.back()->q;
+        if ((newDuration > HPGV::maxDuration) || (newStartTime + mArr.back()->d > mArr.back()->l) || (newLoad > HPGV::maxLoad)){
+            break;
+        }else{
+            HGAGenome::pushbackRoute(mRoute, mRinfo, mArr.back());
+            mArr.back()->checkServiced();
+            mArr.pop_back();
+            continue;
+        }
+    }
+    return;
 }
 /**
  * Initialize solution using "cluster first - route second"
  */
 void HGAGenome::clusterFirstInit(VCus& refArr){
-    // TODO: clusterFirstInit
     unsigned int clusterSize = 1;
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
@@ -60,7 +112,7 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
     sort(refArr.begin(), refArr.end(), compareAngular);
     if ((HPGV::nCus % HPGV::mVeh) == 0) {
         clusterSize = (int) (HPGV::nCus / HPGV::mVeh);
-    } else {
+    }else{
         clusterSize = (int) (HPGV::nCus / HPGV::mVeh) + 1;
     }
 
@@ -82,12 +134,67 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
             vod = iDay * HPGV::mVeh + iVeh;
             this->m_data[vod] = (RinfoPtr)(new RouteInfo());
             this->m_route[vod].clear();
-            HGAGenome::initRouting(iDay, this->m_route[vod], tempCluster[iVeh], this->m_data[vod]);
+            HGAGenome::initCluster(iDay, this->m_route[vod], tempCluster[iVeh], this->m_data[vod]);
+        }
+        // All routes have been initialized, so we should check if any customer left
+        VCus remainClus(0);
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            if (!tempCluster[iVeh].empty()){
+                remainClus.insert(remainClus.end(), tempCluster[iVeh].begin(), tempCluster[iVeh].end());
+            }
+        }
+        if (!remainClus.empty()){
+            HGAGenome::PRheuristic(this->m_route, this->m_data, remainClus, iDay, true);
+        }
+        // finish routing and calculate duration cost
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            // TODO: delay departure time here
         }
     }
 }
 void HGAGenome::SolomonTONNInit(VCus& refArr){
     // TODO: SolomonTONNInit
-    cout << "solomon" << endl;
-    exit(1);
+    unsigned int iDay = 0;
+    unsigned int iVeh = 0;
+    unsigned int vod = 0;
+    VCus cloneArr(0);
+
+    for (iDay = 0; iDay < HPGV::tDay; iDay++){
+        // solve VRPTW for each day
+        cloneArr.clear();
+        cloneArr = refArr;
+        VCus::iterator skipCus;
+        // check patterns and remove all customers that should not be visited on current day
+        // of course, we also remove all customers that has been satisfied
+        for (skipCus = cloneArr.begin(); skipCus != cloneArr.end();
+                ++skipCus) {
+            if ((*skipCus)->isServiced) {
+                cloneArr.erase(skipCus);
+                skipCus--;
+                continue;
+            }
+            int flag = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
+            flag &= (*skipCus)->pattern;
+            if (flag == 0) {
+                cloneArr.erase(skipCus);
+                skipCus--;
+            }
+        }
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            this->m_data[vod] = (RinfoPtr)(new RouteInfo());
+            this->m_route[vod].clear();
+            HGAGenome::initSolomon(iDay, this->m_route[vod], cloneArr, this->m_data[vod]);
+        }
+        // All routes have been initialized, so we should check if any customer left
+        if (!cloneArr.empty()){
+            HGAGenome::PRheuristic(this->m_route, this->m_data, cloneArr, iDay, true);
+        }
+        // finish routing and calculate duration cost
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            // TODO: delay departure time here
+        }
+    }
 }

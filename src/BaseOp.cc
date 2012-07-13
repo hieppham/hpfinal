@@ -61,7 +61,8 @@ void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus){
         mRoute.push_back(VertexPtr(new Vertex(mCus)));
         mRoute.back()->timeArrive = newTimeArrive;
         mRoute.back()->timeStartService = newTimeStart;
-        mRoute.back()->timeWait = mCus->e - mRoute.back()->timeStartService;
+
+        mRoute.back()->timeWait = max(0, mCus->e - mRoute.back()->timeStartService);
         mRoute.back()->timeDeparture = newTimeStart + mCus->d;
     }
     if (mRoute.back()->timeStartService > mCus->l){
@@ -69,10 +70,10 @@ void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus){
     }
 }
 /**
- * Insert a customer at a defined position in a route (pTrace = -1 means end of route)
+ * Insert a customer at a defined position in a route (pTrace = VERYLAST means end of route)
  */
 void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus, unsigned int& pTrace){
-    if (pTrace == -1){
+    if (pTrace == VERYLAST){
         HGAGenome::pushbackRoute(mRoute, mRinfo, mCus);
     }else{
         Route::iterator pos = mRoute.begin();
@@ -80,10 +81,10 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus,
             pos++;
         }
         mRoute.insert(pos, VertexPtr(new Vertex(mCus)));
+        pos--;
         // TODO: update information for all customers
-        Route::iterator endOfRoute = mRoute.end();
-        for (Route::iterator uIter = pos; uIter != endOfRoute; ++uIter){
-            if (pTrace == 0){
+        for (Route::iterator uIter = pos; uIter != mRoute.end(); ++uIter){
+            if (uIter == mRoute.begin()){
                 (*uIter)->timeArrive = gDistance[0][(*uIter)->cus->id];
                 (*uIter)->timeStartService = max((*uIter)->cus->e, gDistance[0][(*uIter)->cus->id]);
                 (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
@@ -93,18 +94,13 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus,
             }else{
                 Route::iterator beforeIter = uIter;
                 beforeIter--;
-                (*uIter)->timeArrive = (*beforeIter)->timeStartService + (*beforeIter)->cus->d
-                                                        + gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
+                (*uIter)->timeArrive = (*beforeIter)->timeDeparture + gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
 
                 mRinfo->cost += gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
-                if ((*uIter)->timeArrive < (*uIter)->cus->e){
-                    (*uIter)->timeStartService = (*uIter)->cus->e;
-                    (*uIter)->timeWait = (*uIter)->cus->e - (*uIter)->timeArrive;
-                }else{
-                    (*uIter)->timeStartService = (*uIter)->timeArrive;
-                    if ((*uIter)->timeArrive > (*uIter)->cus->l){
-                        mRinfo->timeVio += ((*uIter)->timeArrive - (*uIter)->cus->l);
-                    }
+                (*uIter)->timeStartService = max((*uIter)->timeArrive, (*uIter)->cus->e);
+                (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
+                if ((*uIter)->timeStartService > (*uIter)->cus->l){
+                    mRinfo->timeVio += ((*uIter)->timeStartService - (*uIter)->cus->l);
                 }
                 (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
                 mRinfo->load += (*uIter)->cus->q;
@@ -130,13 +126,13 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
     unsigned int pTrace = 0;
     unsigned int currPos = 0;
     VCus::iterator minVPos;
-    Route::iterator nextCus, prevCus, endOfRoute, uIter, beforeIter;
+    Route::iterator nextCus, prevCus, uIter, beforeIter;
 
     while(1){
         maxProfit = NEGINF;
         for (VCus::iterator kIter = arrCus.begin(), endArr = arrCus.end(); kIter != endArr; ++kIter){
             // evaluate all possible move
-            for (nextCus = mRoute.begin(), endOfRoute = mRoute.end(), currPos = 0; nextCus != endOfRoute; ++nextCus){
+            for (nextCus = mRoute.begin(), currPos = 0; nextCus != mRoute.end(); ++nextCus){
                  bool legal = true;
                  if (currPos == 0){
                      newEarliestTime = max((*kIter)->e, gDistance[0][(*kIter)->id]);
@@ -152,7 +148,7 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                      uIter = nextCus;
                      beforeIter = nextCus;
                      uIter++;
-                     while((uIter != endOfRoute) && legal){
+                     while((uIter != mRoute.end()) && legal){
                          (*uIter)->pf = max(0, (*beforeIter)->pf);
                          if ((*uIter)->timeStartService + (*uIter)->pf > (*uIter)->cus->l){
                              legal = false;
@@ -195,7 +191,7 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                      uIter = nextCus;
                      beforeIter = nextCus;
                      uIter++;
-                     while ((uIter != endOfRoute) && (legal)){
+                     while ((uIter != mRoute.end()) && (legal)){
                          (*uIter)->pf = max(0, (*beforeIter)->pf);
                          if ((*uIter)->timeStartService + (*uIter)->pf > (*uIter)->cus->l){
                              legal = false;
@@ -221,10 +217,9 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
 
             }
             // insert at the end of route
-            prevCus = endOfRoute;
+            prevCus = mRoute.end();
             prevCus--;
-            newEarliestTime = max((*kIter)->e, (*prevCus)->timeStartService
-                                     + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
             newLastestTime = min((*kIter)->l, gDepot->l);
             if (newEarliestTime < newLastestTime){
                 double c11 = gDistance[(*prevCus)->cus->id][(*kIter)->id] + gDistance[(*kIter)->id][0] - HPGV::I1Mu * gDistance[(*prevCus)->cus->id][0];
@@ -232,7 +227,7 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                 newProfit = HPGV::I1Lambda * gDistance[0][(*kIter)->id] - HPGV::I1Alpha * c11 - (1 - HPGV::I1Alpha) * c12;
                 if (newProfit > maxProfit){
                     maxProfit = newProfit;
-                    pTrace = -1;
+                    pTrace = VERYLAST;
                     minVPos = kIter;
                 }
             }
@@ -250,4 +245,149 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
         }
     }
     return;
+}
+/**
+ * Potvin - Rosseau heuristic
+ */
+void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arrCus, unsigned int& iDay, bool checkService = false){
+    // TODO: PRheuristic
+    unsigned int iVeh = 0;
+    unsigned int vod = 0;
+    double newEarliestTime = 0;
+    double newLastestTime = 0;
+
+    unsigned int currPos = 0;
+    unsigned int pTrace = 0;
+    unsigned int rVod = 0;
+    double newProfit = 0;
+    double minProfit = POSINF;
+    VCus::iterator minVPos, kIter;
+    Route::iterator prevCus, nextCus, uIter, beforeIter;
+    while(!arrCus.empty()){
+        minProfit = POSINF;
+        for (kIter = arrCus.begin(); kIter != arrCus.end(); ++kIter){
+            for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                // for r \in R
+                vod = iDay * HPGV::mVeh + iVeh;
+                // for (i-1, i) \in r
+                if (m_route[vod].empty()){
+                    newEarliestTime = max((*kIter)->e, gDistance[0][(*kIter)->id]);
+                    newLastestTime = (*kIter)->l;
+
+                    newProfit = gDistance[0][(*kIter)->id];
+                    if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                        pTrace = 0;
+                        rVod = vod;
+                        minVPos = kIter;
+                        minProfit = newProfit;
+                    }
+                }else{
+                    for (nextCus = m_route[vod].begin(), currPos = 0; nextCus != m_route[vod].end(); ++nextCus){
+                        // prevCus = nextCus - 1;
+                        // isFeasible(i, j)
+                        if (currPos == 0){
+                            // i - 1 means the depot
+                            newEarliestTime = max((*kIter)->e, m_data[vod]->timeLeaveDepot + gDistance[0][(*kIter)->id]);
+                            newLastestTime = min((*kIter)->l, gDepot->l);
+                            newProfit = gDistance[0][(*kIter)->id];
+                            newProfit += gDistance[(*kIter)->id][(*nextCus)->cus->id];
+                            newProfit -= gDistance[(*nextCus)->cus->id][0];
+
+                            if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                                rVod = vod;
+                                pTrace = 0;
+                                minVPos = kIter;
+                                minProfit = newProfit;
+                            }
+                        }else{
+                            prevCus = nextCus;
+                            prevCus--;
+                            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+                            newLastestTime = min((*kIter)->l, (*nextCus)->cus->l - (*kIter)->d - gDistance[(*nextCus)->cus->id][(*kIter)->id]);
+
+                            newProfit = gDistance[(*prevCus)->cus->id][(*kIter)->id] + gDistance[(*kIter)->id][(*nextCus)->cus->id] - gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
+
+                            if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                                rVod = vod;
+                                pTrace = currPos;
+                                minVPos = kIter;
+                                minProfit = newProfit;
+                            }
+                        }
+                        currPos++;
+                    }
+                    // insert after the last item
+                    prevCus = m_route[vod].end();
+                    prevCus--;
+                    newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+                    newLastestTime = min((*kIter)->l, gDepot->l);
+
+                    newProfit = gDistance[0][(*kIter)->id] + gDistance[(*kIter)->id][(*prevCus)->cus->id] - gDistance[(*prevCus)->cus->id][0];
+                    if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                        rVod = vod;
+                        pTrace = VERYLAST;
+                        minVPos = kIter;
+                        minProfit = newProfit;
+                    }
+                }
+            }
+        }// end for(kIter....)
+        // if not found the best move
+        if (minProfit == POSINF){
+            minVPos = arrCus.begin();
+            rVod = iDay * HPGV::mVeh + GARandomInt(0, HPGV::mVeh - 1);
+            pTrace = VERYLAST;
+        }
+        // Insert (i*, j*) and Update(r*)
+        HGAGenome::insertIntoRoute(m_route[rVod], m_data[rVod], *minVPos, pTrace);
+        if (checkService){
+            (*minVPos)->checkServiced();
+        }
+        // Now N = N\j*
+        arrCus.erase(minVPos);
+    }// end while
+}
+/**
+ * Print out solution (for testing)
+ */
+void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
+    unsigned int iVeh = 0;
+    unsigned int iDay = 0;
+    unsigned int vod = 0;
+    fstream ofs;
+    ofs.open(fileout, ios::out|ios::app);
+    if (ofs.is_open()) {
+        while (ofs.good()) {
+            if (!hg.isFeasible){
+                ofs << "* ";
+            }
+            ofs << hg.durationCost << endl;
+                for (iDay = 0; iDay < HPGV::tDay; iDay++){
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        vod = iDay*HPGV::mVeh + iVeh;
+                        Route::iterator uIter, endIter;
+                        for (uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
+                            if (uIter == hg.m_route[vod].begin()){
+                                ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
+                                ofs << hg.m_data[vod]->cost << "\t" << hg.m_data[vod]->load << "\t";
+                                ofs << "0(" << hg.m_data[vod]->timeLeaveDepot << ")  ";
+                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                            }else{
+                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                            }
+                        }
+                        if (hg.m_route[vod].size() > 0){
+                            uIter = --hg.m_route[vod].end();
+                            ofs << "0 (" << (*uIter)->timeDeparture + gDistance[(*uIter)->cus->id][0] << ")\n";
+                        }
+                    }
+                }
+                ofs << "====================================" << endl;
+            break;
+        }
+        ofs.close();
+    }else{
+        cerr << "Can not open \"" << fileout << "\" for output.\n";
+        exit(1);
+    }
 }

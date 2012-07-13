@@ -35,6 +35,9 @@ double HPGV::I1Lambda = 0;
 double HPGV::I1Mu = 0;
 double HPGV::I1Alpha = 0;
 
+double HPGV::SGamma2 = 0;
+double HPGV::SGamma3 = 0;
+
 long HPGV::utsIter = 80;
 double HPGV::utsLambda = 0.015;
 
@@ -109,6 +112,7 @@ int getParams(fstream &ifs, char* filein) {
             ifs >> HPGV::I1Lambda >> HPGV::I1Mu >> HPGV::I1Alpha;
             ifs >> HPGV::utsIter >> HPGV::utsLambda;
             ifs >> HPGV::rvnsIter >> HPGV::rvnsPRev >> HPGV::rvnsTmax;
+            ifs >> HPGV::SGamma2 >> HPGV::SGamma3;
             ifs.close();
         } catch (...) {
             cerr << "Can not read parameters \"" << filein << "\" from file.\n";
@@ -145,8 +149,8 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
             ofs << bestSol.durationCost << endl;
                 HGAGenome::globalCopyRoute(bestSol);
                 for (iDay = 0; iDay < gtDays; iDay++){
-                    for (iVeh = 0; iVeh < gmVehicles; iVeh++){
-                        vod = iDay*gmVehicles + iVeh;
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        vod = iDay*HPGV::mVeh + iVeh;
                         HGAGenome::delayDeparture(vod, gRoute[vod]);
                         Route::iterator uIter, endIter;
                         for (uIter = gRoute[vod].begin(), endIter = gRoute[vod].end(); uIter != endIter; ++uIter){

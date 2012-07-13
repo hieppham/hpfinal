@@ -29,11 +29,16 @@ void HGAGenome::Initializer(GAGenome& g) {
     int randType = GARandomInt(1, 3);
 //    if (randType == 1){
     // TODO: debug here
-    if (randType > 0){
-        hg.clusterFirstInit(refArr);
-    }else{
-        hg.SolomonTONNInit(refArr);
-    }
+//    if (randType > 0){
+//        hg.clusterFirstInit(refArr);
+//    }else{
+//        hg.SolomonTONNInit(refArr);
+//    }
+    hg.SolomonTONNInit(refArr);
+    // TODO: for test only
+    char* testfileout = "debug1307.txt";
+    HGAGenome::printSolution(hg, testfileout);
+    randType++;
 }
 
 float HGAGenome::Evaluator(GAGenome& g) {
