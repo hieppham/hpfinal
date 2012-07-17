@@ -19,6 +19,7 @@ public:
 public:
     RouteInfo();
     virtual ~RouteInfo();
+    void resetAll(void);
 };
 
 #endif /* ROUTEINFO_H_ */

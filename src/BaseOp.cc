@@ -83,7 +83,8 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus,
         mRoute.insert(pos, VertexPtr(new Vertex(mCus)));
         pos--;
         // TODO: update information for all customers
-        for (Route::iterator uIter = pos; uIter != mRoute.end(); ++uIter){
+        mRinfo->resetAll();
+        for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
             if (uIter == mRoute.begin()){
                 (*uIter)->timeArrive = gDistance[0][(*uIter)->cus->id];
                 (*uIter)->timeStartService = max((*uIter)->cus->e, gDistance[0][(*uIter)->cus->id]);

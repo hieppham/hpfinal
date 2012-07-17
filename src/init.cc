@@ -198,3 +198,35 @@ void HGAGenome::SolomonTONNInit(VCus& refArr){
         }
     }
 }
+/**
+ * update violations after initializing
+ */
+void HGAGenome::updateTotalVio(void){
+    unsigned int iDay = 0;
+    unsigned int iVeh = 0;
+    unsigned int vod = 0;
+    // reset all value
+    this->durationCost = 0;
+    this->totalCapacityVio = 0;
+    this->totalDurationVio = 0;
+    this->totalTimeVio = 0;
+
+    for (iDay = 0; iDay < HPGV::tDay; iDay++){
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            // total travel cost
+            this->durationCost += this->m_data[vod]->cost;
+            // total violation of duration
+            if (this->m_data[vod]->cost > HPGV::maxDuration){
+                this->totalDurationVio += (this->m_data[vod]->cost - HPGV::maxDuration);
+            }
+            // total violation of capacity
+            if (this->m_data[vod]->load > HPGV::maxLoad){
+                this->totalCapacityVio += (this->m_data[vod]->load - HPGV::maxLoad);
+            }
+            // total violation of time windows
+            this->totalTimeVio += this->m_data[vod]->timeVio;
+        }
+    }
+    this->isFeasible = (this->totalCapacityVio == 0) && (this->totalDurationVio == 0) && (this->totalTimeVio == 0);
+}

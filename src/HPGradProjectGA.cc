@@ -105,3 +105,10 @@ HPGradProjectGA::step()
 
     stats.update(*pop);       // update the statistics by one generation
 }
+
+/**
+ * Main method of selector
+ */
+GAGenome& HPGradSelector::select() const {
+    return pop->best(GARandomInt(0, pop->size()/2), GAPopulation::SCALED);
+}

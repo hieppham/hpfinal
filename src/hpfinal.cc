@@ -223,9 +223,9 @@ int main(int argc, char** argv) {
         cacheDistances(gDistance, gArrC);
         HGAGenome genome(0);
         HPGradProjectGA ga(genome);
-//        HPGradScaling scaling;
-//        HPGradSelector select;
-//
+        HPGradSelector select;
+        //        HPGradScaling scaling;
+
         ga.parameters(argv[2]); // read parameters from settings file
         HPGV::nKeep = (int)(ga.populationSize() - ga.nReplacement());
         HPGV::nPop = 2*((int)ga.nReplacement()/2);
@@ -233,8 +233,8 @@ int main(int argc, char** argv) {
             HPGV::nPop -= 2;
         }
         ga.minimize();          // minimize objective function
+        ga.selector(select);
 //        ga.scaling(scaling);
-//        ga.selector(select);
 //
         cout << "\nEvolving..." << endl;
         cpu_time();

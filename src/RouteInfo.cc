@@ -18,3 +18,10 @@ RouteInfo::RouteInfo() {
 RouteInfo::~RouteInfo() {
 }
 
+void RouteInfo::resetAll(void){
+    this->cost = 0;
+    this->load = 0;
+    this->timeLeaveDepot = 0;
+    this->timeVio = 0;
+    this->FTS0 = 0;
+}

@@ -69,6 +69,8 @@ public:
     static void insertIntoRoute(Route&, RinfoPtr&, Customer*, unsigned int&);
     static void SolomonI1(Route&, RinfoPtr&, VCus&);
     static void PRheuristic(vector<Route>&, RouteData&, VCus&, unsigned int&, bool);
+
+    void updateTotalVio(void);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {
