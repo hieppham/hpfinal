@@ -17,7 +17,7 @@ HPGradProjectGA::step()
     // Generate the individuals in the temporary population from individuals in
     // the main population.
 
-    for(i=0; i < (int) HPGV::nPop; i+=2){   // takes care of odd population
+    for(i = 0; i < (int) HPGV::nPop; i += 2){   // takes care of odd population
         mom = &(pop->select());
         dad = &(pop->select());
         stats.numsel += 2;      // keep track of number of selections
@@ -37,8 +37,8 @@ HPGradProjectGA::step()
         stats.nummut += (mut = tmpPop->individual(i+1).mutate(pMutation()));
         if(mut > 0) c2 = 1;
         // After crossover and mutation, we educate all offsprings
-//        HGAGenome::Education(tmpPop->individual( i ), CNG);
-//        HGAGenome::Education(tmpPop->individual( i+1 ), CNG);
+        HGAGenome::Education(tmpPop->individual( i ), CNG);
+        HGAGenome::Education(tmpPop->individual( i+1 ), CNG);
 
         stats.numeval += c1 + c2;
     }

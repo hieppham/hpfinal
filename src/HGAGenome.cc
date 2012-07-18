@@ -8,7 +8,6 @@
 #include "HGAGenome.h"
 
 extern vector<Customer> gArrC;
-extern vector<vector<double> > gDistance;
 /**
  * Some methods of class CustomerInDay
  */
@@ -176,4 +175,21 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
     // HGAGenome::printSolution(hg, "Mutation.txt");
     if(nMut) hg._evaluated = gaFalse;
     return nMut;
+}
+
+/**
+ * Education - improve quality of offsprings
+ */
+int HGAGenome::Education(GAGenome& g, const int CNG){
+    HGAGenome & hg = (HGAGenome &) g;
+
+    if ((CNG % 2) == 0){
+        hg = HGAGenome::UTS(hg);
+    }else{
+        hg = HGAGenome::RVNS(hg);
+        // TODO: pattern improvement
+    }
+    HGAGenome::improveRoute(hg);
+
+    return 0;
 }

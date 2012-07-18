@@ -46,6 +46,8 @@ typedef std::list<VertexPtr> Route;
 
 typedef vector<Customer*> VCus;
 
+typedef map<CustomerInDay*, int, ltcid> TabuMap;
+
 class HGAGenome: public GAGenome {
 public:
     GADefineIdentity("HGAGenome", 251);
@@ -58,7 +60,7 @@ public:
     static int Crossover(const GAGenome&, const GAGenome&, GAGenome*, GAGenome*);
     static int explorationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
     static int exploitationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
-    static int Education(const GAGenome&, const int);
+    static int Education(GAGenome&, const int);
 public:
     void clusterFirstInit(VCus&);
     void SolomonTONNInit(VCus&);
@@ -76,6 +78,14 @@ public:
     void tourConstruct(void);
 
     void modifyEachCustomer(void);
+public:
+    static HGAGenome UTS(HGAGenome&);
+    bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
+    bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
+
+    static HGAGenome RVNS(HGAGenome&);
+
+    static void improveRoute(HGAGenome&);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {
