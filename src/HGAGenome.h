@@ -67,10 +67,15 @@ public:
 
     static void pushbackRoute(Route&, RinfoPtr&, Customer*);
     static void insertIntoRoute(Route&, RinfoPtr&, Customer*, unsigned int&);
+    static void removeFromRoute(Route&, RinfoPtr&, int);
+    static void updateInfo(Route&, RinfoPtr&);
     static void SolomonI1(Route&, RinfoPtr&, VCus&);
     static void PRheuristic(vector<Route>&, RouteData&, VCus&, unsigned int&, bool);
 
     void updateTotalVio(void);
+    void tourConstruct(void);
+
+    void modifyEachCustomer(void);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {

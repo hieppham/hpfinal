@@ -48,11 +48,7 @@ void HGAGenome::Initializer(GAGenome& g) {
     for (unsigned int i = 0; i < HPGV::nCus; i++){
         hg.m_pattern[i] = hg.arrC[i].pattern;
     }
-    for (unsigned int vod = 0; vod < (HPGV::numRoute); vod++){
-        for (Route::iterator rIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); rIter != endIter; ++rIter){
-            hg.m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
-        }
-    }
+    hg.tourConstruct();
 
     hg.updateTotalVio();
 }
@@ -90,158 +86,94 @@ int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGe
     return numOffsping;
 }
 
-int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HGAGenome& child){
+int HGAGenome::Mutator(GAGenome& g, float pMut) {
+    // TODO: Mutator
+    int nMut = 0;
+    int oldPattern, newPattern, insertMask, removeMask;
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
-    unsigned int tempSize = 0;
-    double newStartTime = 0;
-    vector<vector<int> > checkInherit(0, vector<int>(0));
-    vector<int>::iterator findPos;
+    VCus tmpCus(0);
 
-    VCus backupArr;
-    VCus cloneArr;  // copy of current cluster
-    VCus::iterator minVPos, skipCus, kIter;
+    HGAGenome & hg = (HGAGenome &) g;
 
-    Route::iterator prevCus, nextCus, uIter, beforeIter;
-    checkInherit.resize(HPGV::tDay);
+    for (unsigned int i = 0; i < HPGV::nCus; i++){
+        // changing the pattern assignment of a few customers, which are selected through a low probability
+        if (GAFlipCoin(pMut)){
+            // assign new pattern for selected customer
+            // skip if this customer has only one pattern
+            if (hg.arrC[i].a > 1){
+                nMut++;
+                Customer* mixer = &(hg.arrC[i]);
+                oldPattern = hg.m_pattern[i];
+                int ord = GARandomInt(0, hg.arrC[i].a - 1);
+                while(1){
+                    if (hg.arrC[i].comb[ord] != oldPattern){
+                        newPattern = hg.arrC[i].comb[ord];
+                        break;
+                    }
+                    ord++;
+                    ord %= hg.arrC[i].a;
+                }
+                hg.m_pattern[i] = newPattern;
+                insertMask = newPattern;
+                removeMask = oldPattern;
+                insertMask ^= (newPattern & oldPattern);
+                removeMask ^= (newPattern & oldPattern);
 
-    // STEP 1: Assign a pattern to each customer
-    // inherit pattern assignments from parent P1
-    tempSize = p1.m_tour.size();
-    child.m_pattern.resize(HPGV::nCus);
+                // update genome by insert customer into new routes and remove it from old routes
+                for (iDay = 0; iDay < HPGV::tDay; iDay++){
+                    int flagInsert = (int) pow(2, (double)HPGV::tDay - iDay - 1);
+                    int flagRemove = flagInsert;
+                    flagInsert &= insertMask;
+                    flagRemove &= removeMask;
 
-    int cutPointOne = GARandomInt(0, tempSize - 2);
-    int cutPointTwo = GARandomInt(cutPointOne + 1, tempSize - 1);
-
-    for (int i = cutPointOne; i <= cutPointTwo; i++){
-        int lcid = p1.m_tour[i]->cid - 1;
-        iDay = (int) (p1.m_tour[i]->vod / HPGV::mVeh);
-        child.m_pattern[lcid] |= (int) pow(2, (double)(HPGV::tDay - iDay - 1));
-        child.arrC[lcid].pattern = child.m_pattern[lcid];
-        child.arrC[lcid].token++;
-    }
-    // inherit pattern assignments from pattern P2
-    for (iDay = 0; iDay < HPGV::tDay; iDay++){
-        for (unsigned int i = 0; i < HPGV::nCus; i++){
-            if (child.arrC[i].token < child.arrC[i].f){
-                int flag = (int) pow(2, (double)(HPGV::tDay - iDay - 1));
-                int flagBkp = flag;
-                for (int j = 0; j < child.arrC[j].a; j++){
-                    flag &= child.arrC[i].comb[j];
-                    if (flag == 0){
-                        continue;
-                    }else{
-                        flagBkp |= child.arrC[i].pattern;
-                        flag = flagBkp;
-                        flagBkp &= child.arrC[i].comb[j];
-                        if (flagBkp != 0){
-                            child.arrC[i].pattern = flag;
-                            child.arrC[i].token = numberOfSetBits(flag);
+                    if (flagInsert){
+                        // check if customer has already existed or not
+                        bool needServiced = true;
+                        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                            unsigned int currVod = iDay * HPGV::mVeh + iVeh;
+                            if (hg.m_route[currVod].empty()){
+                                continue;
+                            }else{
+                                for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
+                                    if ((*uIter)->cus->id == mixer->id){
+                                        needServiced = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        // here we insert customer into one route of this day
+                        if (needServiced){
+                            tmpCus.clear();
+                            tmpCus.push_back(mixer);
+                            HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                        }
+                    }else if (flagRemove){
+                        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                            vod = iDay * HPGV::mVeh + iVeh;
+                            if (hg.m_route[vod].empty()){
+                                continue;
+                            }else{
+                                for (Route::iterator uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
+                                    if ((*uIter)->cus->id == mixer->id){
+                                        HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
-    // complete pattern assignments
-    for (unsigned int i = 0; i < HPGV::nCus; i++){
-        if (!child.arrC[i].isServiced){
-            // assign a random pattern that includes day(i)
-            int ord = GARandomInt(0, child.arrC[i].a - 1);
-            while(1){
-                int flagBkp = child.arrC[i].pattern;
-                flagBkp &= child.arrC[i].comb[ord];
-                if (flagBkp !=0){
-                    child.arrC[i].pattern = child.arrC[i].comb[ord];
-                    child.m_pattern[i] = child.arrC[i].pattern;
-                    child.arrC[i].isServiced = true;
-                    break;
-                }
-                ord++;
-                ord = ord % child.arrC[i].a;
-            }
-        }
-    }
 
-    // tempSize = HPGV::numRoute;
-    // STEP 2 : Assign customers to routes
-    // Copy routes from P1
-    // initialize all routes
-    child.m_route.resize(HPGV::numRoute);
-    child.m_data.resize(HPGV::numRoute);
-    for (unsigned int tm = 0; tm < HPGV::numRoute; tm++){
-        child.m_data[tm] = RinfoPtr(new RouteInfo());
-    }
+    hg.tourConstruct();
+    hg.updateTotalVio();
 
-    backupArr.resize(HPGV::nCus);
-    for (unsigned int ic = 0; ic < HPGV::nCus; ic++){
-        backupArr[ic] = &(child.arrC[ic]);
-    }
-
-    // The customers between the two cutting points determined in Step 1a are routed
-    // as in the P1 parent and the corresponding sequences are copied into C
-    for (int i = cutPointOne; i <= cutPointTwo; i++){
-        int s2cid = p1.m_tour[i]->cid - 1;
-        int s2vod = p1.m_tour[i]->vod;
-        int tmpDay = s2vod/HPGV::mVeh;
-
-        HGAGenome::pushbackRoute(child.m_route[s2vod], child.m_data[s2vod], backupArr[s2cid]);
-
-        checkInherit[tmpDay].push_back(p1.m_tour[i]->cid);
-    }
-
-    // Assign remaining customers to routes
-    for (iDay = 0; iDay < HPGV::tDay; iDay++) {
-        cloneArr.clear();
-        cloneArr = backupArr;
-        // check patterns and remove all customers that should not be visited on current day
-        // of course, we also remove all customers that has been satisfied
-        for (skipCus = cloneArr.begin(); skipCus != cloneArr.end(); ++skipCus) {
-            int flag = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
-            flag &= (*skipCus)->pattern;
-            if (flag == 0) {
-                cloneArr.erase(skipCus);
-                skipCus--;
-            }else{
-                findPos = find(checkInherit[iDay].begin(), checkInherit[iDay].end(), (*skipCus)->id);
-                if (findPos != checkInherit[iDay].end()){
-                    cloneArr.erase(skipCus);
-                    skipCus--;
-                    checkInherit[iDay].erase(findPos);
-                }
-            }
-        }
-        // here we use cost insertion heuristic (Potvin - Rosseau, 1993)
-        // sort(cloneArr.begin(), cloneArr.end(), compareEndingTime);
-        HGAGenome::PRheuristic(child.m_route, child.m_data, cloneArr, iDay, true);
-    }
-
-    // complete tour genome
-    for (vod = 0; vod < (HPGV::numRoute); vod++){
-        for (Route::iterator rIter = child.m_route[vod].begin(), endIter = child.m_route[vod].end(); rIter != endIter; ++rIter){
-            child.m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
-        }
-    }
-
-    child.updateTotalVio();
-    HGAGenome::printSolution(child, "childExplor.txt");
-    child._evaluated = gaFalse;
-
-    return 1;
-}
-
-int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, HGAGenome& child){
-    // TODO: exploitationCrossover
-    child._evaluated = gaFalse;
-
-    return 1;
-}
-
-int HGAGenome::Mutator(GAGenome& g, float pMut) {
-    // TODO: Mutator
-    int nMut = 0;
-    HGAGenome & hgenome = (HGAGenome &) g;
-    if(nMut) hgenome._evaluated = gaFalse;
+    // HGAGenome::printSolution(hg, "Mutation.txt");
+    if(nMut) hg._evaluated = gaFalse;
     return nMut;
 }

@@ -83,37 +83,43 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus,
         mRoute.insert(pos, VertexPtr(new Vertex(mCus)));
         pos--;
         // TODO: update information for all customers
-        mRinfo->resetAll();
-        for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
-            if (uIter == mRoute.begin()){
-                (*uIter)->timeArrive = gDistance[0][(*uIter)->cus->id];
-                (*uIter)->timeStartService = max((*uIter)->cus->e, gDistance[0][(*uIter)->cus->id]);
-                (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
-                (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
-                mRinfo->cost += gDistance[0][(*uIter)->cus->id];
-                mRinfo->load += (*uIter)->cus->q;
-            }else{
-                Route::iterator beforeIter = uIter;
-                beforeIter--;
-                (*uIter)->timeArrive = (*beforeIter)->timeDeparture + gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
+        HGAGenome::updateInfo(mRoute, mRinfo);
+    }
+}
+void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
+    mRinfo->resetAll();
+    if (mRoute.empty()){
+        return;
+    }
+    for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
+        if (uIter == mRoute.begin()){
+            (*uIter)->timeArrive = gDistance[0][(*uIter)->cus->id];
+            (*uIter)->timeStartService = max((*uIter)->cus->e, gDistance[0][(*uIter)->cus->id]);
+            (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
+            (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
+            mRinfo->cost += gDistance[0][(*uIter)->cus->id];
+            mRinfo->load += (*uIter)->cus->q;
+        }else{
+            Route::iterator beforeIter = uIter;
+            beforeIter--;
+            (*uIter)->timeArrive = (*beforeIter)->timeDeparture + gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
 
-                mRinfo->cost += gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
-                (*uIter)->timeStartService = max((*uIter)->timeArrive, (*uIter)->cus->e);
-                (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
-                if ((*uIter)->timeStartService > (*uIter)->cus->l){
-                    mRinfo->timeVio += ((*uIter)->timeStartService - (*uIter)->cus->l);
-                }
-                (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
-                mRinfo->load += (*uIter)->cus->q;
+            mRinfo->cost += gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
+            (*uIter)->timeStartService = max((*uIter)->timeArrive, (*uIter)->cus->e);
+            (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
+            if ((*uIter)->timeStartService > (*uIter)->cus->l){
+                mRinfo->timeVio += ((*uIter)->timeStartService - (*uIter)->cus->l);
             }
+            (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
+            mRinfo->load += (*uIter)->cus->q;
         }
-        // link the last customer with depot
-        double newStartTime = mRoute.back()->timeDeparture + gDistance[0][mRoute.back()->cus->id];
-        mRinfo->cost += gDistance[0][mRoute.back()->cus->id];
+    }
+    // link the last customer with depot
+    double newStartTime = mRoute.back()->timeDeparture + gDistance[0][mRoute.back()->cus->id];
+    mRinfo->cost += gDistance[0][mRoute.back()->cus->id];
 
-        if (newStartTime > gDepot->l){
-            mRinfo->timeVio += (newStartTime - gDepot->l);
-        }
+    if (newStartTime > gDepot->l){
+        mRinfo->timeVio += (newStartTime - gDepot->l);
     }
 }
 /**
@@ -390,5 +396,28 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
     }else{
         cerr << "Can not open \"" << fileout << "\" for output.\n";
         exit(1);
+    }
+}
+
+void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, int idToErase){
+    if (mRoute.empty()){
+        return;
+    }
+    for (Route::iterator uIter = mRoute.begin(), endIter = mRoute.end(); uIter != endIter; ++uIter){
+        if ((*uIter)->cus->id == idToErase){
+            mRoute.erase(uIter);
+            break;
+        }
+    }
+    // update information
+    HGAGenome::updateInfo(mRoute, mRinfo);
+}
+
+void HGAGenome::tourConstruct(void){
+    this->m_tour.clear();
+    for (unsigned int vod = 0; vod < (HPGV::numRoute); vod++){
+        for (Route::iterator rIter = this->m_route[vod].begin(), endIter = this->m_route[vod].end(); rIter != endIter; ++rIter){
+            this->m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
+        }
     }
 }
