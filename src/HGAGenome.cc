@@ -86,7 +86,6 @@ int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGe
 }
 
 int HGAGenome::Mutator(GAGenome& g, float pMut) {
-    // TODO: Mutator
     int nMut = 0;
     int oldPattern, newPattern, insertMask, removeMask;
     unsigned int iDay = 0;

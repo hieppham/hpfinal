@@ -82,6 +82,7 @@ public:
     static HGAGenome UTS(HGAGenome&);
     bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
     bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
+    void tourUpdate(vector<vector<int> >&);
 
     static HGAGenome RVNS(HGAGenome&);
 
