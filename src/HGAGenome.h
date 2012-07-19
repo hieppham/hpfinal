@@ -78,15 +78,24 @@ public:
     void tourConstruct(void);
 
     void modifyEachCustomer(void);
+
+    static double calcObjectValue(HGAGenome&);
 public:
     static HGAGenome UTS(HGAGenome&);
-    bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
-    bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
+    static bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
+    static bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
     void tourUpdate(vector<vector<int> >&);
 
     static HGAGenome RVNS(HGAGenome&);
+    static HGAGenome Shaking(HGAGenome&, unsigned int, double);
+    static HGAGenome ShakingPattern(HGAGenome&, unsigned int, double);
+    static HGAGenome ShakingMoveSegment(HGAGenome&, unsigned int, double);
+    static HGAGenome ShakingExchangeSegments(HGAGenome&, unsigned int, double);
 
     static void improveRoute(HGAGenome&);
+
+    static void apply2OptForAllRoutes(double, double, double, HGAGenome&);
+    static void apply2OptStarForAllRoutes(double, double, double, HGAGenome&);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {

@@ -17,7 +17,10 @@ void HGAGenome::copy(const GAGenome& g) {
     if (&g != this && sameClass(g)) {
         GAGenome::copy(g); // copy the base class part
         HGAGenome & hgenome = (HGAGenome &)g;
+
+        arrC = hgenome.arrC;
         m_route = hgenome.m_route;
+        m_data = hgenome.m_data;
 
         m_pattern = hgenome.m_pattern;
         m_tour = hgenome.m_tour;
@@ -420,4 +423,23 @@ void HGAGenome::tourConstruct(void){
             this->m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
         }
     }
+}
+
+double HGAGenome::calcObjectValue(HGAGenome& hg){
+    double score = 0;
+
+    double aPen = 1;
+    double bPen = 1;
+    double cPen = 1;
+
+    // hg.updateTotalVio();
+    score = hg.durationCost;
+    // calculate score after updating parameters
+    if (HPGV::hPenalty != 0){
+        double sumSq = (HPGV::avgQ * HPGV::avgQ) + (HPGV::avgD * HPGV::avgD) + (HPGV::avgW * HPGV::avgW);
+        aPen = HPGV::hPenalty * HPGV::avgQ / sumSq;
+        bPen = HPGV::hPenalty * HPGV::avgD / sumSq;
+        cPen = HPGV::hPenalty * HPGV::avgW / sumSq;
+    }
+    return score;
 }
