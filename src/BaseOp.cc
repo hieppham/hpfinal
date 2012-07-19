@@ -417,6 +417,11 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, int idToErase){
 }
 
 void HGAGenome::tourConstruct(void){
+    this->m_pattern.resize(HPGV::nCus);
+    for (unsigned int i = 0; i < HPGV::nCus; i++){
+        this->m_pattern[i] = this->arrC[i].pattern;
+    }
+
     this->m_tour.clear();
     for (unsigned int vod = 0; vod < (HPGV::numRoute); vod++){
         for (Route::iterator rIter = this->m_route[vod].begin(), endIter = this->m_route[vod].end(); rIter != endIter; ++rIter){

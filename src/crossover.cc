@@ -52,9 +52,12 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
                         if (flagBkp != 0){
                             child.arrC[i].pattern = flag;
                             child.arrC[i].token = numberOfSetBits(flag);
+                            child.arrC[i].isServiced = true;
                         }
                     }
                 }
+            }else{
+                child.arrC[i].isServiced = true;
             }
         }
     }
@@ -63,7 +66,7 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
         if (!child.arrC[i].isServiced){
             // assign a random pattern that includes day(i)
             int ord = GARandomInt(0, child.arrC[i].a - 1);
-            while(1){
+            while (1){
                 int flagBkp = child.arrC[i].pattern;
                 flagBkp &= child.arrC[i].comb[ord];
                 if (flagBkp !=0){
@@ -134,7 +137,7 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
     // complete tour genome
     child.tourConstruct();
     child.updateTotalVio();
-    // HGAGenome::printSolution(child, "childExplor.txt");
+    HGAGenome::printSolution(child, "childExplor.txt");
     child._evaluated = gaFalse;
 
     return 1;
@@ -193,7 +196,7 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
 
     child.tourConstruct();
     child.updateTotalVio();
-    // HGAGenome::printSolution(child, "childExploit.txt");
+    HGAGenome::printSolution(child, "childExploit.txt");
     child._evaluated = gaFalse;
 
     return 1;

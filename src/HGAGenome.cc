@@ -121,7 +121,7 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
 
                 // update genome by insert customer into new routes and remove it from old routes
                 for (iDay = 0; iDay < HPGV::tDay; iDay++){
-                    int flagInsert = (int) pow(2, (double)HPGV::tDay - iDay - 1);
+                    int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
                     int flagRemove = flagInsert;
                     flagInsert &= insertMask;
                     flagRemove &= removeMask;
@@ -171,7 +171,7 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
     hg.tourConstruct();
     hg.updateTotalVio();
 
-    // HGAGenome::printSolution(hg, "Mutation.txt");
+    HGAGenome::printSolution(hg, "Mutation.txt");
     if(nMut) hg._evaluated = gaFalse;
     return nMut;
 }
@@ -182,7 +182,7 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
 int HGAGenome::Education(GAGenome& g, const int CNG){
     HGAGenome & hg = (HGAGenome &) g;
 
-    if ((CNG % 2) == 0){
+    if ((CNG % 2) != 0){
         hg = HGAGenome::UTS(hg);
     }else{
         hg = HGAGenome::RVNS(hg);

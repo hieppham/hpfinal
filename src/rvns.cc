@@ -100,13 +100,182 @@ HGAGenome HGAGenome::Shaking(HGAGenome& hgenome, unsigned int k, double pRev){
 
 HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hg(hgenome);
-    // TODO: ShakingPattern
+    int oldPattern, newPattern, insertMask, removeMask;
+
+    unsigned int iDay = 0;
+    unsigned int iVeh = 0;
+    unsigned int vod = 0;
+    VCus tmpCus(0);
+
+    // move to neighbor by changing pattern up to k time(s)
+    int tryCounter = 0;
+    int maxTries = 100;
+    unsigned int counter = 0;
+
+    do {
+        // select customer that has more than 1 pattern
+        int rc = GARandomInt(0, HPGV::nCus - 1);
+        if (hg.arrC[rc].a > 1){
+            Customer* mixer = &(hg.arrC[rc]);
+            oldPattern = hg.m_pattern[rc];
+            int ord = GARandomInt(0, hg.arrC[rc].a - 1);
+            while (1){
+                if (hg.arrC[rc].comb[ord] != oldPattern){
+                    newPattern = hg.arrC[rc].comb[ord];
+                    break;
+                }
+                ord++;
+                ord %= hg.arrC[rc].a;
+            }
+            hg.m_pattern[rc] = newPattern;
+
+            insertMask = newPattern;
+            removeMask = oldPattern;
+            insertMask ^= (newPattern & oldPattern);
+            removeMask ^= (newPattern & oldPattern);
+
+            // update genome by insert customer into new routes and remove it from old routes
+            for (iDay = 0; iDay < HPGV::tDay; iDay++){
+                int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay -1));
+                int flagRemove = flagInsert;
+                flagInsert &= insertMask;
+                flagRemove &= removeMask;
+
+                if (flagInsert){
+                    // check if this customer has been serviced on current day
+                    bool needServiced = true;
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        // for r \in R
+                        unsigned currVod = iDay * HPGV::mVeh + iVeh;
+                        if (hg.m_route[currVod].empty()){
+                            continue;
+                        }else{
+                            for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
+                                if ((*uIter)->cus->id == mixer->id){
+                                    needServiced = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // insert into one route of this day
+                    if (needServiced){
+                        tmpCus.clear();
+                        tmpCus.push_back(mixer);
+                        HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                    }
+                } else if (flagRemove){
+                    // remove customer from current day
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        vod = iDay * HPGV::mVeh + iVeh;
+                        if (hg.m_route[vod].empty()){
+                            continue;
+                        }else{
+                            for (Route::iterator uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
+                                if ((*uIter)->cus->id == mixer->id){
+                                    HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            counter++;
+        }
+        tryCounter++;
+    } while ((counter < k) && (tryCounter < maxTries));
+
+    hg.tourConstruct();
+    // HGAGenome::printSolution(hg, "ShakingPattern.txt");
     return hg;
 }
 
 HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hg(hgenome);
     // TODO: ShakingMoveSegment
+    Route firstHead, movSeg, firstTail, secondHead;
+    // move to neighbor by moving a random segment of maximal length k of a route
+    // to another route on the same day
+    unsigned int iDay, iVF, iVS, vod1, vod2, fSize, sSize;
+
+    HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
+    while (1){
+        iDay = GARandomInt(0, HPGV::tDay - 1);
+        iVF = GARandomInt(0, HPGV::mVeh - 1);
+
+        iVS = GARandomInt(0, HPGV::mVeh - 1);
+        if (iVS == iVF){
+            continue;
+        }
+
+        vod1 = iDay * HPGV::mVeh + iVF;
+        vod2 = iDay * HPGV::mVeh + iVS;
+        fSize = hg.m_route[vod1].size();
+        sSize = hg.m_route[vod2].size();
+        if ((fSize >= 1) && (sSize >= 1)){
+            break;
+        }
+    }
+
+    // select a random segment of maximal length k from first route
+
+    unsigned int pivot1 = GARandomInt(1, fSize);
+    unsigned int pivot2 = GARandomInt(1, sSize);
+
+    firstHead.clear();
+    for (unsigned int i = 0; i < pivot1 - 1; i++){
+        firstHead.push_back(hg.m_route[vod1].front());
+        hg.m_route[vod1].pop_front();
+    }
+    unsigned int counter = 0;
+    movSeg.clear();
+    if (k != 6){
+        do{
+            movSeg.push_back(hg.m_route[vod1].front());
+            hg.m_route[vod1].pop_front();
+            counter++;
+        } while ((counter < k) && (!hg.m_route[vod1].empty()));
+    }else{
+        do{
+            movSeg.push_back(hg.m_route[vod1].front());
+            hg.m_route[vod1].pop_front();
+            counter++;
+        } while (!hg.m_route[vod1].empty());
+    }
+
+    // re-connect first tour
+    firstTail.clear();
+    firstTail = hg.m_route[vod1];
+
+    hg.m_route[vod1].clear();
+    hg.m_route[vod1] = firstHead;
+
+    hg.m_route[vod1].splice(hg.m_route[vod1].end(), firstTail, firstTail.begin(), firstTail.end());
+
+    // reverse the segment with a small probability pRev
+    if (GAFlipCoin((float)pRev)){
+        movSeg.reverse();
+    }
+
+    // insert new segment into second route
+    secondHead.clear();
+    for (unsigned int j = 0; j < pivot2 - 1; j++){
+        secondHead.push_back(hg.m_route[vod2].front());
+        hg.m_route[vod2].pop_front();
+    }
+    secondHead.splice(secondHead.end(), movSeg, movSeg.begin(), movSeg.end());
+    secondHead.splice(secondHead.end(), hg.m_route[vod2], hg.m_route[vod2].begin(), hg.m_route[vod2].end());
+
+    hg.m_route[vod2].clear();
+    hg.m_route[vod2] = secondHead;
+
+    hg.m_pattern.resize(HPGV::nCus);
+    for (unsigned int i = 0; i < HPGV::nCus; i++){
+        hg.m_pattern[i] = hg.arrC[i].pattern;
+    }
+    hg.tourConstruct();
+    HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
     return hg;
 }
 

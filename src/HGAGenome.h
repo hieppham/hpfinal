@@ -78,7 +78,7 @@ public:
     void tourConstruct(void);
 
     void modifyEachCustomer(void);
-
+    static void delayDeparture(Route&, RinfoPtr&);
     static double calcObjectValue(HGAGenome&);
 public:
     static HGAGenome UTS(HGAGenome&);
