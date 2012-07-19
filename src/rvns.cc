@@ -1,7 +1,6 @@
 #include "HGAGenome.h"
 
 HGAGenome HGAGenome::RVNS(HGAGenome& hgenome){
-    // TODO: RVNS
     HGAGenome bestNeighbor(hgenome);    // s*
     HGAGenome orig(hgenome);
     HGAGenome hgs(hgenome);     // s'
@@ -193,13 +192,11 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
 HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hg(hgenome);
-    // TODO: ShakingMoveSegment
     Route firstHead, movSeg, firstTail, secondHead;
     // move to neighbor by moving a random segment of maximal length k of a route
     // to another route on the same day
     unsigned int iDay, iVF, iVS, vod1, vod2, fSize, sSize;
 
-    HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
     while (1){
         iDay = GARandomInt(0, HPGV::tDay - 1);
         iVF = GARandomInt(0, HPGV::mVeh - 1);
@@ -270,17 +267,113 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     hg.m_route[vod2].clear();
     hg.m_route[vod2] = secondHead;
 
-    hg.m_pattern.resize(HPGV::nCus);
-    for (unsigned int i = 0; i < HPGV::nCus; i++){
-        hg.m_pattern[i] = hg.arrC[i].pattern;
-    }
+    HGAGenome::updateInfo(hg.m_route[vod1], hg.m_data[vod1]);
+    HGAGenome::updateInfo(hg.m_route[vod2], hg.m_data[vod2]);
+
     hg.tourConstruct();
-    HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
+    hg.updateTotalVio();
+    // HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
+
     return hg;
 }
 
 HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hg(hgenome);
-    // TODO: ShakingExchangeSegments
+    // move to neighbor by exchange 2 random segments of maximum length k of 2 routes
+    // on the same day
+    Route firstHead, firstSeg, secondSeg, secondHead;
+    unsigned int iDay, iVF, iVS, vod1, vod2, fSize, sSize;
+
+    while (1){
+        iDay = GARandomInt(0, HPGV::tDay - 1);
+        iVF = GARandomInt(0, HPGV::mVeh - 1);
+        iVS = GARandomInt(0, HPGV::mVeh - 1);
+        if (iVF == iVS){
+            continue;
+        }
+        vod1 = iDay*HPGV::mVeh + iVF;
+        vod2 = iDay*HPGV::mVeh + iVS;
+
+        fSize = hg.m_route[vod1].size();
+        sSize = hg.m_route[vod2].size();
+
+        if ((fSize >= 1) && (sSize >= 1)){
+            break;
+        }
+    }
+
+    unsigned int pivot1 = GARandomInt(1, fSize);
+    unsigned int pivot2 = GARandomInt(1, sSize);
+
+    // select a random segment of maximal length k from first route
+    firstHead.clear();
+    for (unsigned int i = 0; i < pivot1 - 1; i++){
+        firstHead.push_back(hg.m_route[vod1].front());
+        hg.m_route[vod1].pop_front();
+    }
+    unsigned int counter = 0;
+    firstSeg.clear();
+    if (k != 6){
+        do{
+            firstSeg.push_back(hg.m_route[vod1].front());
+            hg.m_route[vod1].pop_front();
+            counter++;
+        } while ((counter < k) && (!hg.m_route[vod1].empty()));
+    }else{
+        do{
+            firstSeg.push_back(hg.m_route[vod1].front());
+            hg.m_route[vod1].pop_front();
+            counter++;
+        } while (!hg.m_route[vod1].empty());
+    }
+
+    // select a random segment of maximal length k from second route
+    for (unsigned int m = 0; m < pivot2 - 1; m++){
+        secondHead.push_back(hg.m_route[vod2].front());
+        hg.m_route[vod2].pop_front();
+    }
+    counter = 0;
+    secondSeg.clear();
+    if (k != 6){
+        do{
+            secondSeg.push_back(hg.m_route[vod2].front());
+            hg.m_route[vod2].pop_front();
+            counter++;
+        } while ((counter < k) && (!hg.m_route[vod2].empty()));
+    }else{
+        do{
+            secondSeg.push_back(hg.m_route[vod2].front());
+            hg.m_route[vod2].pop_front();
+            counter++;
+        } while (!hg.m_route[vod2].empty());
+    }
+
+    // reverse 2 segments with a small probability pRev
+    if (GAFlipCoin((float)pRev)){
+        firstSeg.reverse();
+        secondSeg.reverse();
+    }
+
+    // insert new segment into second route
+    secondHead.splice(secondHead.end(), firstSeg, firstSeg.begin(), firstSeg.end());
+    secondHead.splice(secondHead.end(), hg.m_route[vod2], hg.m_route[vod2].begin(), hg.m_route[vod2].end());
+
+    hg.m_route[vod2].clear();
+    hg.m_route[vod2] = secondHead;
+
+    // insert new segment into first route
+    firstHead.splice(firstHead.end(), secondSeg, secondSeg.begin(), secondSeg.end());
+    firstHead.splice(firstHead.end(), hg.m_route[vod1], hg.m_route[vod1].begin(), hg.m_route[vod1].end());
+
+    hg.m_route[vod1].clear();
+    hg.m_route[vod1] = firstHead;
+
+    HGAGenome::updateInfo(hg.m_route[vod1], hg.m_data[vod1]);
+    HGAGenome::updateInfo(hg.m_route[vod2], hg.m_data[vod2]);
+
+    hg.tourConstruct();
+    hg.updateTotalVio();
+    // HGAGenome::printSolution(hg, "ShakingExchangeSegments.txt");
+
     return hg;
 }

@@ -55,7 +55,7 @@ public:
     static double avgW;
 
     // store best cost
-    static double bestFeasiblecost;
+    static double bestFeasibleCost;
 
     static unsigned int nPop;
     static unsigned int nKeep;

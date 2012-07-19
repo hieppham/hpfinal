@@ -36,4 +36,28 @@ public:
     virtual GASelectionScheme* clone() const { return new HPGradSelector; }
     virtual GAGenome& select() const;
 };
+
+/**
+ * Customized scaling scheme
+ */
+class HPGradScaling : public GAScalingScheme{
+public:
+    GADefineIdentity("HPGradScaling", 286);
+    HPGradScaling(){}
+    HPGradScaling(const HPGradScaling & arg){copy(arg);}
+    HPGradScaling & operator=(const GAScalingScheme & arg){
+        copy(arg);
+        return *this;
+    }
+    virtual ~HPGradScaling(){}
+    virtual GAScalingScheme * clone() const{
+        return new HPGradScaling(*this);
+    }
+    virtual void evaluate(const GAPopulation & p);
+    virtual void copy(const GAScalingScheme & arg){
+        if(&arg != this && sameClass(arg)){
+            GAScalingScheme::copy(arg);
+        }
+    }
+};
 #endif /* HPGRADPROJECTGA_H_ */

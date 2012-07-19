@@ -60,7 +60,6 @@ void HGAGenome::tourUpdate(vector<vector<int> >& pFreq){
 }
 
 HGAGenome HGAGenome::UTS(HGAGenome& hg){
-    // TODO: UTS
     double aQ = 1;
     double bD = 1;
     double cW = 1;

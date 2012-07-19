@@ -96,6 +96,13 @@ public:
 
     static void apply2OptForAllRoutes(double, double, double, HGAGenome&);
     static void apply2OptStarForAllRoutes(double, double, double, HGAGenome&);
+
+    bool inter2OptStar(double, double, double, unsigned int, unsigned int);
+    bool interCrossExchange(double, double, double, unsigned int, unsigned int);
+    bool interRouteOpt(double, double, double, unsigned int, unsigned int);
+
+    bool intraOrOpt(double, double, double, unsigned int);
+    bool intra2Opt(double, double, double, unsigned int);
 public:
     HGAGenome(int);
     HGAGenome(const HGAGenome & orig) {
@@ -127,4 +134,32 @@ public:
     cusinday m_tour;
 };
 
+class cost{
+public:
+    double aQ;
+    double bD;
+    double cW;
+
+    double maxLoad;
+    double maxDuration;
+public:
+    cost(double a, double b, double c, double mL, double mD): aQ(a), bD(b), cW(c), maxLoad(mL), maxDuration(mD){}
+    double operator()(Route& r, RinfoPtr& rInfo){
+        double costVal = 0;
+        Route::iterator uIter, prevIter;
+        // consider duplication of calculating duration here.
+
+        costVal = rInfo->cost;
+        if (rInfo->load > maxLoad){
+            costVal += (rInfo->load - maxLoad) * aQ;
+        }
+        if (rInfo->cost > maxDuration){
+            costVal += (rInfo->cost - maxDuration) * bD;
+        }
+        if (rInfo->timeVio > 0){
+            costVal += rInfo->timeVio * cW;
+        }
+        return costVal;
+    }
+};
 #endif /* HGAGENOME_H_ */

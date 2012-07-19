@@ -54,7 +54,7 @@ void HGAGenome::Initializer(GAGenome& g) {
 
 float HGAGenome::Evaluator(GAGenome& g) {
     HGAGenome & hgenome = (HGAGenome &) g;
-    // TODO: Evaluator
+    return (float)(HGAGenome::calcObjectValue(hgenome));
 
     return 0;
 }
@@ -171,7 +171,8 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
     hg.tourConstruct();
     hg.updateTotalVio();
 
-    HGAGenome::printSolution(hg, "Mutation.txt");
+    // HGAGenome::printSolution(hg, "Mutation.txt");
+
     if(nMut) hg._evaluated = gaFalse;
     return nMut;
 }

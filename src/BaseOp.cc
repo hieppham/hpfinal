@@ -1,7 +1,6 @@
 #include "HGAGenome.h"
 
 extern Customer* gDepot;
-extern vector<Customer> gArrC;
 extern vector<vector<double> > gDistance;
 
 HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
@@ -433,18 +432,15 @@ void HGAGenome::tourConstruct(void){
 double HGAGenome::calcObjectValue(HGAGenome& hg){
     double score = 0;
 
-    double aPen = 1;
-    double bPen = 1;
-    double cPen = 1;
-
     // hg.updateTotalVio();
     score = hg.durationCost;
     // calculate score after updating parameters
     if (HPGV::hPenalty != 0){
         double sumSq = (HPGV::avgQ * HPGV::avgQ) + (HPGV::avgD * HPGV::avgD) + (HPGV::avgW * HPGV::avgW);
-        aPen = HPGV::hPenalty * HPGV::avgQ / sumSq;
-        bPen = HPGV::hPenalty * HPGV::avgD / sumSq;
-        cPen = HPGV::hPenalty * HPGV::avgW / sumSq;
+        double aPen = HPGV::hPenalty * HPGV::avgQ / sumSq;
+        double bPen = HPGV::hPenalty * HPGV::avgD / sumSq;
+        double cPen = HPGV::hPenalty * HPGV::avgW / sumSq;
+        score += aPen * hg.totalCapacityVio + bPen * hg.totalDurationVio + cPen * hg.totalTimeVio;
     }
     return score;
 }

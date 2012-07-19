@@ -29,7 +29,7 @@ double HPGV::avgQ = 0;
 double HPGV::avgD = 0;
 double HPGV::avgW = 0;
 
-double HPGV::bestFeasiblecost = 0;
+double HPGV::bestFeasibleCost = 0;
 
 double HPGV::I1Lambda = 0;
 double HPGV::I1Mu = 0;
@@ -52,6 +52,8 @@ Customer* gDynamic;
 double gDynamicStart;
 
 vector<vector<double> > gDistance(1, vector<double>(1));
+
+HGAGenome bestSol(0);
 
 /*
  * ====================================
@@ -127,7 +129,6 @@ int getParams(fstream &ifs, char* filein) {
 }
 
 int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double totalTime){
-/*
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
@@ -143,28 +144,26 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
             ofs << "Result of HGA for \"" << inputFileName << "\" (" << totalTime << " sec)\n";
             ofs << "(" << hours << " hr " << minInHour << " min " << remainSecOne << " sec" << ")";
             ofs << "(" << minAll << " min " << remainSecTwo << " sec" << ")\n";
-            if (!bestSol.feasible){
+            if (!bestSol.isFeasible){
                 ofs << "* ";
             }
             ofs << bestSol.durationCost << endl;
-                HGAGenome::globalCopyRoute(bestSol);
-                for (iDay = 0; iDay < gtDays; iDay++){
+                for (iDay = 0; iDay < HPGV::tDay; iDay++){
                     for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                         vod = iDay*HPGV::mVeh + iVeh;
-                        HGAGenome::delayDeparture(vod, gRoute[vod]);
                         Route::iterator uIter, endIter;
-                        for (uIter = gRoute[vod].begin(), endIter = gRoute[vod].end(); uIter != endIter; ++uIter){
-                            if (uIter == gRoute[vod].begin()){
+                        for (uIter = bestSol.m_route[vod].begin(), endIter = bestSol.m_route[vod].end(); uIter != endIter; ++uIter){
+                            if (uIter == bestSol.m_route[vod].begin()){
                                 ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
-                                ofs << gRouteInfo[vod]->duration << "\t" << gRouteInfo[vod]->load << "\t";
-                                ofs << "0(" << gRouteInfo[vod]->timeLeaveDepot << ")  ";
+                                ofs << bestSol.m_data[vod]->cost << "\t" << bestSol.m_data[vod]->load << "\t";
+                                ofs << "0(" << bestSol.m_data[vod]->timeLeaveDepot << ")  ";
                                 ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }else{
                                 ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }
                         }
-                        if (gRoute[vod].size() > 0){
-                            uIter = --gRoute[vod].end();
+                        if (bestSol.m_route[vod].size() > 0){
+                            uIter = --bestSol.m_route[vod].end();
                             ofs << "0 (" << (*uIter)->timeDeparture + gDistance[(*uIter)->cus->id][0] << ")\n";
                         }
                     }
@@ -177,7 +176,6 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
         cerr << "Can not open \"" << fileout << "\" for output.\n";
         exit(1);
     }
-*/
     return 0;
 }
 
@@ -224,7 +222,7 @@ int main(int argc, char** argv) {
         HGAGenome genome(0);
         HPGradProjectGA ga(genome);
         HPGradSelector select;
-        //        HPGradScaling scaling;
+        HPGradScaling scaling;
 
         ga.parameters(argv[2]); // read parameters from settings file
         HPGV::nKeep = (int)(ga.populationSize() - ga.nReplacement());
@@ -234,18 +232,17 @@ int main(int argc, char** argv) {
         }
         ga.minimize();          // minimize objective function
         ga.selector(select);
-//        ga.scaling(scaling);
-//
+        ga.scaling(scaling);
         cout << "\nEvolving..." << endl;
         cpu_time();
         ga.evolve();
         double totalTime = cpu_time();
-//
-//        if (bestFeasibleCost == 0){
-//            bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
-//        }
+
+        if (HPGV::bestFeasibleCost == 0){
+            bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
+        }
         cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
-//        writeOutputData(ofs, argv[3], argv[1], totalTime);
+        writeOutputData(ofs, argv[3], argv[1], totalTime);
 
         exit(1);
     }

@@ -7,6 +7,8 @@
 
 #include "HPGradProjectGA.h"
 
+extern HGAGenome bestSol;
+
 void
 HPGradProjectGA::step()
 {
@@ -43,14 +45,14 @@ HPGradProjectGA::step()
         stats.numeval += c1 + c2;
     }
     // TODO: fix here!
-//    for (i = nPop; i < tmpPop->size(); i++){
-//        mom = &(pop->select());
-//        stats.numsel += 1;
-//        tmpPop->individual(i).copy(*mom);
-//        HGAGenome::UTS((HGAGenome &)tmpPop->individual(i));
-//        HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
-//        stats.numeval += 1;
-//    }
+    for (i = HPGV::nPop; i < tmpPop->size(); i++){
+        mom = &(pop->select());
+        stats.numsel += 1;
+        tmpPop->individual(i).copy(*mom);
+        HGAGenome::UTS((HGAGenome &)tmpPop->individual(i));
+        HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
+        stats.numeval += 1;
+    }
 
     for(i=0; i<tmpPop->size(); i++)
             pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
@@ -64,11 +66,10 @@ HPGradProjectGA::step()
         pop->add(&tmpPop->individual(i));
     pop->evaluate(gaTrue);      // get info about current pop for next time
 
-    /*
     // update penalty parameters
     HGAGenome & best = (HGAGenome &) pop->best();
     if (best.isFeasible){
-        if (HPGV::bestFeasiblecost == 0){
+        if (HPGV::bestFeasibleCost == 0){
             HPGV::bestFeasibleCost = best.durationCost;
             bestSol = best;
         }else{
@@ -82,22 +83,21 @@ HPGradProjectGA::step()
         HPGV::hPenalty = HPGV::bestFeasibleCost;
     }else{
         HGAGenome & worst = (HGAGenome &) pop->worst();
-        HPGV::hPenalty = worst.getTotalCost();
+        HPGV::hPenalty = worst.durationCost;
     }
     // redefine average values
-    aveQ = 0;
-    aveD = 0;
-    aveW = 0;
+    HPGV::avgQ = 0;
+    HPGV::avgD = 0;
+    HPGV::avgW = 0;
     for (int i = 0; i < pop->size(); i++){
         HGAGenome& tmpHg = (HGAGenome &) (pop->individual(i));
-        aveQ += tmpHg.totalCapacityVio;
-        aveD += tmpHg.totalDurationVio;
-        aveW += tmpHg.totalTimeVio;
+        HPGV::avgQ += tmpHg.totalCapacityVio;
+        HPGV::avgD += tmpHg.totalDurationVio;
+        HPGV::avgW += tmpHg.totalTimeVio;
     }
-    aveQ /= (pop->size());
-    aveD /= (pop->size());
-    aveW /= (pop->size());
-    */
+    HPGV::avgQ /= (pop->size());
+    HPGV::avgD /= (pop->size());
+    HPGV::avgW /= (pop->size());
 
     pop->scale(gaTrue);         // remind the population to do its scaling
 
@@ -111,4 +111,20 @@ HPGradProjectGA::step()
  */
 GAGenome& HPGradSelector::select() const {
     return pop->best(GARandomInt(0, pop->size()/2), GAPopulation::SCALED);
+}
+
+/**
+ * Main scaling method
+ */
+void HPGradScaling::evaluate(const GAPopulation & p){
+    float f;
+    for(int i=0; i<p.size(); i++){
+        HGAGenome & hg = (HGAGenome &)p.individual(i);
+        if (hg.isFeasible){
+            f = p.individual(i).score();
+        }else{
+            f = p.individual(i).score() + HPGV::bestFeasibleCost;
+        }
+        p.individual(i).fitness(f);
+    }
 }

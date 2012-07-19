@@ -1,15 +1,8 @@
 #include "HGAGenome.h"
 
-extern vector<Customer> gArrC;
-extern vector<vector<double> > gDistance;
-extern Customer* gDepot;
-
 int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HGAGenome& child){
     unsigned int iDay = 0;
-    unsigned int iVeh = 0;
-    unsigned int vod = 0;
     unsigned int tempSize = 0;
-    double newStartTime = 0;
     vector<vector<int> > checkInherit(0, vector<int>(0));
     vector<int>::iterator findPos;
 
@@ -137,14 +130,13 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
     // complete tour genome
     child.tourConstruct();
     child.updateTotalVio();
-    HGAGenome::printSolution(child, "childExplor.txt");
+    // HGAGenome::printSolution(child, "childExplor.txt");
     child._evaluated = gaFalse;
 
     return 1;
 }
 
 int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, HGAGenome& child){
-    // TODO: exploitationCrossover
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
@@ -196,7 +188,7 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
 
     child.tourConstruct();
     child.updateTotalVio();
-    HGAGenome::printSolution(child, "childExploit.txt");
+    // HGAGenome::printSolution(child, "childExploit.txt");
     child._evaluated = gaFalse;
 
     return 1;
