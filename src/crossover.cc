@@ -131,6 +131,7 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
     child.tourConstruct();
     child.updateTotalVio();
     // HGAGenome::printSolution(child, "childExplor.txt");
+    cout << "ExplorationCrossover\n";
     child._evaluated = gaFalse;
 
     return 1;
@@ -189,6 +190,7 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
     child.tourConstruct();
     child.updateTotalVio();
     // HGAGenome::printSolution(child, "childExploit.txt");
+    cout << "ExploitationCrossover\n";
     child._evaluated = gaFalse;
 
     return 1;

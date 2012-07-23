@@ -171,7 +171,8 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
     hg.tourConstruct();
     hg.updateTotalVio();
 
-    // HGAGenome::printSolution(hg, "Mutation.txt");
+    HGAGenome::printSolution(hg, "Mutation.txt");
+    cout << "Mutation\n";
 
     if(nMut) hg._evaluated = gaFalse;
     return nMut;
@@ -183,12 +184,13 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
 int HGAGenome::Education(GAGenome& g, const int CNG){
     HGAGenome & hg = (HGAGenome &) g;
 
-    if ((CNG % 2) != 0){
-        hg = HGAGenome::UTS(hg);
-    }else{
-        hg = HGAGenome::RVNS(hg);
-        // TODO: pattern improvement
-    }
+//    if ((CNG % 2) == 0){
+//        hg = HGAGenome::UTS(hg);
+//    }else{
+//        hg = HGAGenome::RVNS(hg);
+//        // TODO: pattern improvement
+//    }
+    // hg = HGAGenome::RVNS(hg);
     HGAGenome::improveRoute(hg);
 
     return 0;

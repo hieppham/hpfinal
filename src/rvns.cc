@@ -187,6 +187,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
     hg.tourConstruct();
     // HGAGenome::printSolution(hg, "ShakingPattern.txt");
+    cout << "shakingPattern\n";
     return hg;
 }
 
@@ -273,6 +274,7 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
+    cout << "shakingMoveSeg\n";
 
     return hg;
 }
@@ -374,6 +376,7 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingExchangeSegments.txt");
+    cout << "shakingExchangeSeg\n";
 
     return hg;
 }

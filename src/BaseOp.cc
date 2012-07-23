@@ -45,7 +45,7 @@ int HGAGenome::write(ostream & os) const {
 /**
  * Insert a customer at last position of a route
  */
-void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus){
+void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus){
     if (mRoute.empty()){
         mRoute.push_back(VertexPtr(new Vertex(mCus)));
         mRoute.back()->timeArrive = gDistance[0][mCus->id];
@@ -74,7 +74,7 @@ void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus){
 /**
  * Insert a customer at a defined position in a route (pTrace = VERYLAST means end of route)
  */
-void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus, unsigned int& pTrace){
+void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus, unsigned int& pTrace){
     if (pTrace == VERYLAST){
         HGAGenome::pushbackRoute(mRoute, mRinfo, mCus);
     }else{
@@ -88,6 +88,85 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer* mCus,
         HGAGenome::updateInfo(mRoute, mRinfo);
     }
 }
+/**
+ * trace best position and insert customer into given route, using Potvin - Rosseau heuristic
+ */
+void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
+    double newEarliestTime = 0;
+    double newLastestTime = 0;
+    double newProfit = 0;
+    double minProfit = POSINF;
+
+    unsigned int pTrace = 0;
+    unsigned int currPos = 0;
+    Route::iterator nextCus, prevCus, uIter, beforeIter;
+
+    if (mRoute.empty()){
+        HGAGenome::pushbackRoute(mRoute, mRinfo, mixer);
+    }else{
+        // for (i-1, i) \in r
+        if (mRoute.empty()){
+            newEarliestTime = max(mixer->e, gDistance[0][mixer->id]);
+            newLastestTime = mixer->l;
+
+            newProfit = gDistance[0][mixer->id];
+            if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                pTrace = 0;
+                minProfit = newProfit;
+            }
+        }else{
+            for (nextCus = mRoute.begin(), currPos = 0; nextCus != mRoute.end(); ++nextCus){
+                // prevCus = nextCus - 1;
+                // isFeasible(i, j)
+                if (currPos == 0){
+                    // i - 1 means the depot
+                    newEarliestTime = max(mixer->e, mRinfo->timeLeaveDepot + gDistance[0][mixer->id]);
+                    newLastestTime = min(mixer->l, gDepot->l);
+                    newProfit = gDistance[0][mixer->id];
+                    newProfit += gDistance[mixer->id][(*nextCus)->cus->id];
+                    newProfit -= gDistance[(*nextCus)->cus->id][0];
+
+                    if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                        pTrace = 0;
+                        minProfit = newProfit;
+                    }
+                }else{
+                    prevCus = nextCus;
+                    prevCus--;
+                    newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][mixer->id]);
+                    newLastestTime = min(mixer->l, (*nextCus)->cus->l - mixer->d - gDistance[(*nextCus)->cus->id][mixer->id]);
+
+                    newProfit = gDistance[(*prevCus)->cus->id][mixer->id] + gDistance[mixer->id][(*nextCus)->cus->id] - gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
+
+                    if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                        pTrace = currPos;
+                        minProfit = newProfit;
+                    }
+                }
+                currPos++;
+            }
+            // insert after the last item
+            prevCus = mRoute.end();
+            prevCus--;
+            newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][mixer->id]);
+            newLastestTime = min(mixer->l, gDepot->l);
+
+            newProfit = gDistance[0][mixer->id] + gDistance[mixer->id][(*prevCus)->cus->id] - gDistance[(*prevCus)->cus->id][0];
+            if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
+                pTrace = VERYLAST;
+                minProfit = newProfit;
+            }
+        }
+        // if not found the best move
+        if (minProfit == POSINF){
+            pTrace = VERYLAST;
+        }
+        // Insert (i*, j*) and Update(r*)
+        HGAGenome::insertIntoRoute(mRoute, mRinfo, mixer, pTrace);
+    }
+    cout << "PRinsert\n";
+}
+
 void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
     mRinfo->resetAll();
     if (mRoute.empty()){
@@ -259,7 +338,6 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
  * Potvin - Rosseau heuristic
  */
 void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arrCus, unsigned int& iDay, bool checkService = false){
-    // TODO: PRheuristic
     unsigned int iVeh = 0;
     unsigned int vod = 0;
     double newEarliestTime = 0;
@@ -384,6 +462,9 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
                             }else{
                                 ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }
+                            if (((*uIter)->cus->id < 1) || ((*uIter)->cus->id > HPGV::nCus)){
+                                ofs << "####################################";
+                            }
                         }
                         if (hg.m_route[vod].size() > 0){
                             uIter = --hg.m_route[vod].end();
@@ -443,4 +524,17 @@ double HGAGenome::calcObjectValue(HGAGenome& hg){
         score += aPen * hg.totalCapacityVio + bPen * hg.totalDurationVio + cPen * hg.totalTimeVio;
     }
     return score;
+}
+
+void HGAGenome::testRoute(Route& mRoute){
+    bool flag = true;
+    for (Route::iterator r = mRoute.begin(), e = mRoute.end(); r != e; ++r){
+        if (((*r)->cus->id < 1) || ((*r)->cus->id > HPGV::nCus)){
+            cout << "Error!!!\n";
+            flag = false;
+        }
+    }
+    if (flag){
+        cout << "testRoute OK\n";
+    }
 }

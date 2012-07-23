@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
             bestSol = (HGAGenome&) (ga.statistics().bestIndividual());
         }
         cout << "\nHGA finished! Total time: " << totalTime << "(sec)\n";
-        writeOutputData(ofs, argv[3], argv[1], totalTime);
+        writeOutputData(ofs, argv[4], argv[1], totalTime);
 
         exit(1);
     }

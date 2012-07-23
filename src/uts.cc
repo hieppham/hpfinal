@@ -47,11 +47,16 @@ void HGAGenome::tourUpdate(vector<vector<int> >& pFreq){
     unsigned int iVehicle = 0;
     unsigned int vod;
 
+    this->m_pattern.resize(HPGV::nCus);
+    for (unsigned int i = 0; i < HPGV::nCus; i++){
+        this->m_pattern[i] = this->arrC[i].pattern;
+    }
+
     this->m_tour.clear();
     for (iDay = 0; iDay < HPGV::tDay; iDay++) {
         for (iVehicle = 0; iVehicle < HPGV::mVeh; iVehicle++) {
             vod = iDay * HPGV::mVeh + iVehicle;
-            for (Route::iterator iterRoute = this->m_route[vod].begin(), endR = this->m_route[vod].end(); iterRoute != endR; ++iterRoute) {
+            for (Route::iterator iterRoute = this->m_route[vod].begin(); iterRoute != this->m_route[vod].end(); ++iterRoute) {
                 this->m_tour.push_back(CidPtr(new CustomerInDay((*iterRoute)->cus->id, vod)));
                 pFreq[vod][(*iterRoute)->cus->id]++;
             }
@@ -68,9 +73,9 @@ HGAGenome HGAGenome::UTS(HGAGenome& hg){
     // number of times attribute (i, k) has been added to the solution during the search process
     vector<vector<int> > pFreq;
 
-    HGAGenome hs = hg;
-    HGAGenome hs2 = hg;
-    HGAGenome hs1 = hg;
+    HGAGenome hs(hg);
+    HGAGenome hs2(hg);
+    HGAGenome hs1(hg);
     bool flag = false;
 
     // Tabu Length \theta = 1.5lg(n)
@@ -87,50 +92,54 @@ HGAGenome HGAGenome::UTS(HGAGenome& hg){
     // main loop
     for (int it = 0; it < HPGV::utsIter; it++){
         // Generate N(s)
-        HGAGenome* bestNeighbor = new HGAGenome(hs);
+        HGAGenome bestNeighbor(hs);
 
         while (1){
-            if (GAFlipCoin(0.5)){
-                if (HGAGenome::UTSNeighborByRouting(*bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
-                    // HGAGenome::printSolution(*bestNeighbor, "utsRouting.txt");
-                    break;
-                }
-            }else{
-                if (HGAGenome::UTSNeighborByPattern(*bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
-                    // HGAGenome::printSolution(*bestNeighbor, "utsPattern.txt");
-                    break;
-                }
+//            if (GAFlipCoin(0.5)){
+//                if (HGAGenome::UTSNeighborByRouting(bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
+//                    HGAGenome::printSolution(bestNeighbor, "utsRouting.txt");
+//                    break;
+//                }
+//            }else{
+//                if (HGAGenome::UTSNeighborByPattern(bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
+//                    HGAGenome::printSolution(bestNeighbor, "utsPattern.txt");
+//                    break;
+//                }
+//            }
+
+            if (HGAGenome::UTSNeighborByRouting(bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
+                HGAGenome::printSolution(bestNeighbor, "utsRouting.txt");
+                break;
             }
         }
 
         // if _s_ is feasible and c(_s_) < c(s1)
-        if ((*bestNeighbor).isFeasible && (*bestNeighbor).durationCost < hs1.durationCost){
-            hs1 = *bestNeighbor;
+        if ((bestNeighbor).isFeasible && (bestNeighbor).durationCost < hs1.durationCost){
+            hs1 = bestNeighbor;
             flag = 1;
-        }else if (utsFit(*bestNeighbor, aQ, bD, cW) < utsFit(hs2, aQ, bD, cW)){
-            hs2 = *bestNeighbor;
+        }else if (utsFit(bestNeighbor, aQ, bD, cW) < utsFit(hs2, aQ, bD, cW)){
+            hs2 = bestNeighbor;
         }
         // Compute q(_s_), d(_s_), w(_s_) and update penalty parameters
-        if ((*bestNeighbor).totalCapacityVio > 0){
+        if ((bestNeighbor).totalCapacityVio > 0){
             aQ /= 1.5;
         }else{
             aQ *= 1.5;
         }
 
-        if ((*bestNeighbor).totalDurationVio > 0){
+        if ((bestNeighbor).totalDurationVio > 0){
             bD /= 1.5;
         }else{
             bD *= 1.5;
         }
 
-        if ((*bestNeighbor).totalTimeVio > 0){
+        if ((bestNeighbor).totalTimeVio > 0){
             cW /= 1.5;
         }else{
             cW *= 1.5;
         }
 
-        hs = *bestNeighbor;
-        delete bestNeighbor;
+        hs = bestNeighbor;
     }
 
     if (!hg.isFeasible){
@@ -151,14 +160,13 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     bool foundNewCid = false;
     int oldPattern, newPattern, insertMask, removeMask;
 
-    VCus tmpCus(0);
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int currVod = 0;
     unsigned int newVod = 0;
     unsigned int newVeh = 0;
 
-    int maxTries = 1000;    // avoid infinite loop
+    int maxTries = 20;    // avoid infinite loop
     int counter = 0;
 
     while ((!foundNewCid) && (counter < maxTries)){
@@ -226,9 +234,23 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                         }
                         // insert into one route of this day
                         if (needServiced){
-                            tmpCus.clear();
-                            tmpCus.push_back(mixer);
-                            HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                            int randVeh = GARandomInt(0, HPGV::mVeh - 1);
+                            for (unsigned int iv = 0; iv < HPGV::mVeh; iv++){
+                                newVeh = (randVeh + iv) % HPGV::mVeh;
+                                newVod = iDay * HPGV::mVeh + newVeh;
+                                if (!isTabu(mixer->id, newVod, g_tabu)){
+                                    HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
+                                    needServiced = false;
+                                    HGAGenome::testRoute(hg.m_route[newVod]);
+                                    break;
+                                }
+                            }
+                        }
+                        if (needServiced){
+                            int randVeh = GARandomInt(0, HPGV::mVeh - 1);
+                            newVod = iDay * HPGV::mVeh + randVeh;
+                            HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
+                            HGAGenome::testRoute(hg.m_route[newVod]);
                         }
                     }else if (flagRemove){
                         // remove customer from current day
@@ -238,9 +260,11 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                             if (hg.m_route[currVod].empty()){
                                 continue;
                             }else{
-                                for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
+                                for (Route::iterator uIter = hg.m_route[currVod].begin(); uIter != hg.m_route[currVod].end(); ++uIter){
                                     if ((*uIter)->cus->id == mixer->id){
                                         HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
+
+                                        HGAGenome::testRoute(hg.m_route[currVod]);
 
                                         CustomerInDay* key = new CustomerInDay(mixer->id, currVod);
                                         TabuMap::iterator pos = g_tabu.find(key);
@@ -267,6 +291,7 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         counter++;
     }
     // TODO: UTSNeighborByPattern
+    cout << "utsPattern\n";
     return foundNewCid;
 }
 
@@ -283,7 +308,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     Route::reverse_iterator ruIter, rprevIter;
 
     Customer* choice;
-    int maxTries = 1000;    // avoid infinite loop
+    int maxTries = 20;    // avoid infinite loop
     int counter = 0;
 
     while ((!foundNewCid) && (counter < maxTries)){
@@ -361,12 +386,12 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
             double newObjVal = hg.m_data[newVod]->cost;
             if (hg.m_data[newVod]->load > HPGV::maxLoad){
-                newObjVal += aQ*(hg.m_data[newVod]->load - HPGV::maxLoad);
+                newObjVal += aQ * (hg.m_data[newVod]->load - HPGV::maxLoad);
             }
             if (hg.m_data[newVod]->cost > HPGV::maxDuration){
-                newObjVal += bD*(hg.m_data[newVod]->cost - HPGV::maxDuration);
+                newObjVal += bD * (hg.m_data[newVod]->cost - HPGV::maxDuration);
             }
-            newObjVal += cW*(hg.m_data[newVod]->timeVio);
+            newObjVal += cW * (hg.m_data[newVod]->timeVio);
 
             if (newObjVal < minObj){
                 bkpVodRoute = tempRoute;
@@ -387,6 +412,6 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         updateTabuMap(g_tabu, tabuLength);
         delete key;
     }
-    // TODO: UTSNeighborByRouting
+
     return foundNewCid;
 }

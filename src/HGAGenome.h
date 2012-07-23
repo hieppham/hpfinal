@@ -67,13 +67,15 @@ public:
     static void initCluster(unsigned int&, Route&, VCus&, RinfoPtr&);
     static void initSolomon(unsigned int&, Route&, VCus&, RinfoPtr&);
 
-    static void pushbackRoute(Route&, RinfoPtr&, Customer*);
-    static void insertIntoRoute(Route&, RinfoPtr&, Customer*, unsigned int&);
+    static void pushbackRoute(Route&, RinfoPtr&, Customer*&);
+    static void insertIntoRoute(Route&, RinfoPtr&, Customer*&, unsigned int&);
+    static void PRinsert(Route&, RinfoPtr&, Customer*&);
     static void removeFromRoute(Route&, RinfoPtr&, int);
     static void updateInfo(Route&, RinfoPtr&);
     static void SolomonI1(Route&, RinfoPtr&, VCus&);
     static void PRheuristic(vector<Route>&, RouteData&, VCus&, unsigned int&, bool);
 
+    static void testRoute(Route&);
     void updateTotalVio(void);
     void tourConstruct(void);
 
