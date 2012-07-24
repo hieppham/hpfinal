@@ -15,7 +15,7 @@ HPGradProjectGA::step()
     int i, mut, c1, c2;
     GAGenome *mom, *dad;          // tmp holders for selected genomes
     int CNG = stats.generation();
-
+    cout << CNG <<"\n";
     // Generate the individuals in the temporary population from individuals in
     // the main population.
 

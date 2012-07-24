@@ -1,17 +1,13 @@
 #include "HGAGenome.h"
+#include "hpfinal.h"
 
-extern vector<Customer> gArrC;
-extern vector<vector<double> > gDistance;
-extern Customer* gDepot;
-extern Customer* gDynamic;
-extern double gDynamicStart;
 /**
  * compare the angles that 2 customers make with the depot
  * ====================================
  */
 bool compareAngular(const Customer* c1, const Customer* c2) {
-    double areaTrapezoid = (c1->x - gDepot->x) * (c2->y - gDepot->y)
-            - (c1->y - gDepot->y) * (c2->x - gDepot->x);
+    double areaTrapezoid = (c1->x - HPGV::gDepot->x) * (c2->y - HPGV::gDepot->y)
+            - (c1->y - HPGV::gDepot->y) * (c2->x - HPGV::gDepot->x);
     return (areaTrapezoid > 0);
 }
 bool compareEndingTime(Customer* c1, Customer* c2) {
@@ -22,13 +18,13 @@ bool compareEndingTime(Customer* c1, Customer* c2) {
  * ====================================
  */
 bool compareMetric(Customer* c1, Customer* c2) {
-    double firstMetric = metric(gDepot, c1, 0, gDistance);
-    double secondMetric = metric(gDepot, c2, 0, gDistance);
+    double firstMetric = metric(HPGV::gDepot, c1, 0, HPGV::gDistance);
+    double secondMetric = metric(HPGV::gDepot, c2, 0, HPGV::gDistance);
     return (firstMetric - secondMetric > 0);
 }
 bool compareMetricDynamic(Customer* c1, Customer* c2) {
-    double firstMetric = metric(gDynamic, c1, gDynamicStart, gDistance);
-    double secondeMetric = metric(gDynamic, c2, gDynamicStart, gDistance);
+    double firstMetric = metric(HPGV::gDynamic, c1, HPGV::gDynamicStart, HPGV::gDistance);
+    double secondeMetric = metric(HPGV::gDynamic, c2, HPGV::gDynamicStart, HPGV::gDistance);
     return (firstMetric - secondeMetric > 0);
 }
 /**
@@ -77,14 +73,14 @@ void HGAGenome::initSolomon(unsigned int& iDay, Route& mRoute, VCus& mArr, Rinfo
     mArr.pop_back();
 
     while(1){
-        gDynamic = mRoute.back()->cus;
-        gDynamicStart = mRoute.back()->timeStartService;
+        HPGV::gDynamic = mRoute.back()->cus;
+        HPGV::gDynamicStart = mRoute.back()->timeStartService;
         if (mArr.empty()){
             break;
         }
         sort(mArr.begin(), mArr.end(), compareMetricDynamic);
-        double newDuration = mRinfo->cost + gDistance[gDynamic->id][mArr.back()->id];
-        double newStartTime = mRoute.back()->timeDeparture + gDistance[gDynamic->id][mArr.back()->id];
+        double newDuration = mRinfo->cost + HPGV::gDistance[HPGV::gDynamic->id][mArr.back()->id];
+        double newStartTime = mRoute.back()->timeDeparture + HPGV::gDistance[HPGV::gDynamic->id][mArr.back()->id];
         int newLoad = mRinfo->load + mArr.back()->q;
         if ((newDuration > HPGV::maxDuration) || (newStartTime + mArr.back()->d > mArr.back()->l) || (newLoad > HPGV::maxLoad)){
             break;

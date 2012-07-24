@@ -76,6 +76,14 @@ public:
     static unsigned int rvnsIter;
     static double rvnsPRev;
     static double rvnsTmax;
+
+    static vector<Customer> gArrC; // global variable - array of visitors
+
+    static Customer* gDepot;
+    static Customer* gDynamic;
+    static double gDynamicStart;
+
+    static vector<vector<double> > gDistance;
 };
 
 inline double metric(

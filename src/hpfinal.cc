@@ -44,16 +44,14 @@ double HPGV::utsLambda = 0.015;
 unsigned int HPGV::rvnsIter = 100;
 double HPGV::rvnsPRev = 0.1;
 double HPGV::rvnsTmax = 600;
-
-vector<Customer> gArrC; // global variable - array of visitors
-
-Customer* gDepot;
-Customer* gDynamic;
-double gDynamicStart;
-
-vector<vector<double> > gDistance(1, vector<double>(1));
-
 HGAGenome bestSol(0);
+
+vector<Customer> HPGV::gArrC(0);
+Customer* HPGV::gDepot;
+Customer* HPGV::gDynamic;
+double HPGV::gDynamicStart = 0;
+
+vector<vector<double> > HPGV::gDistance(1, vector<double>(0));
 
 /*
  * ====================================
@@ -78,25 +76,25 @@ int getInputData(fstream &ifs, char* filein) {
             HPGV::maxLoad = 10000;
         }
         ifs >> tid >> tx >> ty >> td >> tq >> tf >> ta;
-        gDepot = new Customer(tid, tx, ty, td, tq, tf, ta);
-        gDepot->a = gDepot->e = gDepot->pattern = 0;
-        gDepot->comb.clear();
+        HPGV::gDepot = new Customer(tid, tx, ty, td, tq, tf, ta);
+        HPGV::gDepot->a = HPGV::gDepot->e = HPGV::gDepot->pattern = 0;
+        HPGV::gDepot->comb.clear();
         ifs >> te >> tl;
-        gDepot->setTime(te, tl);
+        HPGV::gDepot->setTime(te, tl);
 
-        while (ifs.good() && gArrC.size() < HPGV::nCus) {
+        while (ifs.good() && HPGV::gArrC.size() < HPGV::nCus) {
             tempIter = 0;
             ifs >> tid >> tx >> ty >> td >> tq >> tf >> ta;
             Customer* gCustomer = new Customer(tid, tx, ty, td, tq, tf, ta);
-            gArrC.push_back(*gCustomer);
-            gArrC[tid - 1].comb.clear();
+            HPGV::gArrC.push_back(*gCustomer);
+            HPGV::gArrC[tid - 1].comb.clear();
             for (tempIter = 0; tempIter < ta; tempIter++) {
                 ifs >> tc;
-                gArrC[tid - 1].comb.push_back(tc);
+                HPGV::gArrC[tid - 1].comb.push_back(tc);
             }
-            gArrC[tid - 1].comb.resize(ta);
+            HPGV::gArrC[tid - 1].comb.resize(ta);
             ifs >> te >> tl;
-            gArrC[tid - 1].setTime(te, tl);
+            HPGV::gArrC[tid - 1].setTime(te, tl);
             delete gCustomer;
         }
         ifs.close();
@@ -164,7 +162,7 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
                         }
                         if (bestSol.m_route[vod].size() > 0){
                             uIter = --bestSol.m_route[vod].end();
-                            ofs << "0 (" << (*uIter)->timeDeparture + gDistance[(*uIter)->cus->id][0] << ")\n";
+                            ofs << "0 (" << (*uIter)->timeDeparture + HPGV::gDistance[(*uIter)->cus->id][0] << ")\n";
                         }
                     }
                 }
@@ -183,24 +181,24 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
  * Here we cache distances between each customer and the others
  * ====================================
  */
-void cacheDistances(vector<vector<double> >& gDistance, vector<Customer>& gArrC){
+void cacheDistances(){
     unsigned int i = 0;
     unsigned int j = 0;
-    gDistance.resize(HPGV::nCus+1);
+    HPGV::gDistance.resize(HPGV::nCus+1);
     for (i = 0; i <= HPGV::nCus; i++){
-        gDistance[i].resize(HPGV::nCus+1);
+        HPGV::gDistance[i].resize(HPGV::nCus+1);
         for (j = 0; j <= HPGV::nCus; j++){
             if (i == j){
-                gDistance[i][j] = 0;
+                HPGV::gDistance[i][j] = 0;
             }else{
                 if (i < j){
                     if (i == 0){
-                        gDistance[i][j] = distance(gDepot, &gArrC[j-1]);
+                        HPGV::gDistance[i][j] = distance(HPGV::gDepot, &HPGV::gArrC[j-1]);
                     }else{
-                        gDistance[i][j] = distance(&gArrC[i-1], &gArrC[j-1]);
+                        HPGV::gDistance[i][j] = distance(&HPGV::gArrC[i-1], &HPGV::gArrC[j-1]);
                     }
                 }else{
-                    gDistance[i][j] = gDistance[j][i];
+                    HPGV::gDistance[i][j] = HPGV::gDistance[j][i];
                 }
             }
         }
@@ -218,7 +216,7 @@ int main(int argc, char** argv) {
         // read input file
         getInputData(ifs, argv[1]);
         getParams(ifs, argv[2]);
-        cacheDistances(gDistance, gArrC);
+        cacheDistances();
         HGAGenome genome(0);
         HPGradProjectGA ga(genome);
         HPGradSelector select;

@@ -88,12 +88,13 @@ HGAGenome HGAGenome::Shaking(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hgs(hgenome);
 
     if ((k >= 1) && (k <= 6)){
-        hgs = HGAGenome::ShakingPattern(hgenome, k, pRev);
+        hgs = HGAGenome::ShakingMoveSegment(hgenome, k, pRev);
     }else if ((k >= 7) && (k <= 12)){
         hgs = HGAGenome::ShakingMoveSegment(hgenome, k - 6, pRev);
     }else if ((k >= 13) && (k <= 18)){
-        hgs = HGAGenome::ShakingExchangeSegments(hgenome, k - 12, pRev);
+        hgs = HGAGenome::ShakingMoveSegment(hgenome, k - 12, pRev);
     }
+
     return hgs;
 }
 
@@ -104,6 +105,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
+    unsigned int newVod = 0;
     VCus tmpCus(0);
 
     // move to neighbor by changing pattern up to k time(s)
@@ -152,6 +154,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
                             for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
                                 if ((*uIter)->cus->id == mixer->id){
                                     needServiced = false;
+                                    newVod = currVod;
                                     break;
                                 }
                             }
@@ -159,9 +162,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
                     }
                     // insert into one route of this day
                     if (needServiced){
-                        tmpCus.clear();
-                        tmpCus.push_back(mixer);
-                        HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                        HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
                     }
                 } else if (flagRemove){
                     // remove customer from current day
@@ -187,7 +188,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
     hg.tourConstruct();
     // HGAGenome::printSolution(hg, "ShakingPattern.txt");
-    cout << "shakingPattern\n";
+    cout << "rvns shaking pattern\n";
     return hg;
 }
 
@@ -274,7 +275,6 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
-    cout << "shakingMoveSeg\n";
 
     return hg;
 }
@@ -376,7 +376,6 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingExchangeSegments.txt");
-    cout << "shakingExchangeSeg\n";
 
     return hg;
 }

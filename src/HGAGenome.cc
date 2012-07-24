@@ -7,7 +7,6 @@
 
 #include "HGAGenome.h"
 
-extern vector<Customer> gArrC;
 /**
  * Some methods of class CustomerInDay
  */
@@ -27,7 +26,7 @@ void HGAGenome::Initializer(GAGenome& g) {
     HGAGenome & hg = (HGAGenome &) g;
     vector<Customer*> refArr;
     refArr.resize(HPGV::nCus);
-    hg.arrC = gArrC;
+    hg.arrC = HPGV::gArrC;
     hg.m_route.resize(HPGV::numRoute);
     hg.m_data.resize(HPGV::numRoute);
     for (ic = 0; ic < HPGV::nCus; ++ic) {
@@ -70,14 +69,14 @@ int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGe
 
     if (c){
         HGAGenome& sis = (HGAGenome &) *c;
-        sis.arrC = gArrC;
+        sis.arrC = HPGV::gArrC;
         HGAGenome::explorationCrossover(p1, p2, sis);
         numOffsping++;
     }
     // and second offspring is created similarly
     if (d){
         HGAGenome& bro = (HGAGenome &) *d;
-        bro.arrC = gArrC;
+        bro.arrC = HPGV::gArrC;
         HGAGenome::exploitationCrossover(p1, p2, bro);
         numOffsping++;
     }
@@ -171,8 +170,8 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
     hg.tourConstruct();
     hg.updateTotalVio();
 
-    HGAGenome::printSolution(hg, "Mutation.txt");
-    cout << "Mutation\n";
+    // HGAGenome::printSolution(hg, "Mutation.txt");
+    // cout << "Mutation\n";
 
     if(nMut) hg._evaluated = gaFalse;
     return nMut;
@@ -190,7 +189,7 @@ int HGAGenome::Education(GAGenome& g, const int CNG){
 //        hg = HGAGenome::RVNS(hg);
 //        // TODO: pattern improvement
 //    }
-    // hg = HGAGenome::RVNS(hg);
+    hg = HGAGenome::RVNS(hg);
     HGAGenome::improveRoute(hg);
 
     return 0;

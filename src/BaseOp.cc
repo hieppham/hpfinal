@@ -1,8 +1,5 @@
 #include "HGAGenome.h"
 
-extern Customer* gDepot;
-extern vector<vector<double> > gDistance;
-
 HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
     evaluator(Evaluator);
     crossover(Crossover);
@@ -48,18 +45,18 @@ int HGAGenome::write(ostream & os) const {
 void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus){
     if (mRoute.empty()){
         mRoute.push_back(VertexPtr(new Vertex(mCus)));
-        mRoute.back()->timeArrive = gDistance[0][mCus->id];
+        mRoute.back()->timeArrive = HPGV::gDistance[0][mCus->id];
         mRinfo->load = mCus->q;
-        mRinfo->cost = gDistance[0][mCus->id];
-        mRoute.back()->timeStartService = max(mCus->e, gDistance[0][mCus->id]);
+        mRinfo->cost = HPGV::gDistance[0][mCus->id];
+        mRoute.back()->timeStartService = max(mCus->e, HPGV::gDistance[0][mCus->id]);
         mRoute.back()->timeWait = mCus->e - mRoute.back()->timeStartService;
         mRoute.back()->timeDeparture = mRoute.back()->timeStartService + mCus->d;
     }else{
-        double newTimeArrive = mRoute.back()->timeDeparture + gDistance[mRoute.back()->cus->id][mCus->id];
+        double newTimeArrive = mRoute.back()->timeDeparture + HPGV::gDistance[mRoute.back()->cus->id][mCus->id];
         double newTimeStart = max(mCus->e, newTimeArrive);
 
         mRinfo->load += mCus->q;
-        mRinfo->cost += gDistance[mRoute.back()->cus->id][mCus->id];
+        mRinfo->cost += HPGV::gDistance[mRoute.back()->cus->id][mCus->id];
         mRoute.push_back(VertexPtr(new Vertex(mCus)));
         mRoute.back()->timeArrive = newTimeArrive;
         mRoute.back()->timeStartService = newTimeStart;
@@ -106,10 +103,10 @@ void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
     }else{
         // for (i-1, i) \in r
         if (mRoute.empty()){
-            newEarliestTime = max(mixer->e, gDistance[0][mixer->id]);
+            newEarliestTime = max(mixer->e, HPGV::gDistance[0][mixer->id]);
             newLastestTime = mixer->l;
 
-            newProfit = gDistance[0][mixer->id];
+            newProfit = HPGV::gDistance[0][mixer->id];
             if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                 pTrace = 0;
                 minProfit = newProfit;
@@ -120,11 +117,11 @@ void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
                 // isFeasible(i, j)
                 if (currPos == 0){
                     // i - 1 means the depot
-                    newEarliestTime = max(mixer->e, mRinfo->timeLeaveDepot + gDistance[0][mixer->id]);
-                    newLastestTime = min(mixer->l, gDepot->l);
-                    newProfit = gDistance[0][mixer->id];
-                    newProfit += gDistance[mixer->id][(*nextCus)->cus->id];
-                    newProfit -= gDistance[(*nextCus)->cus->id][0];
+                    newEarliestTime = max(mixer->e, mRinfo->timeLeaveDepot + HPGV::gDistance[0][mixer->id]);
+                    newLastestTime = min(mixer->l, HPGV::gDepot->l);
+                    newProfit = HPGV::gDistance[0][mixer->id];
+                    newProfit += HPGV::gDistance[mixer->id][(*nextCus)->cus->id];
+                    newProfit -= HPGV::gDistance[(*nextCus)->cus->id][0];
 
                     if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                         pTrace = 0;
@@ -133,10 +130,10 @@ void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
                 }else{
                     prevCus = nextCus;
                     prevCus--;
-                    newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][mixer->id]);
-                    newLastestTime = min(mixer->l, (*nextCus)->cus->l - mixer->d - gDistance[(*nextCus)->cus->id][mixer->id]);
+                    newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][mixer->id]);
+                    newLastestTime = min(mixer->l, (*nextCus)->cus->l - mixer->d - HPGV::gDistance[(*nextCus)->cus->id][mixer->id]);
 
-                    newProfit = gDistance[(*prevCus)->cus->id][mixer->id] + gDistance[mixer->id][(*nextCus)->cus->id] - gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
+                    newProfit = HPGV::gDistance[(*prevCus)->cus->id][mixer->id] + HPGV::gDistance[mixer->id][(*nextCus)->cus->id] - HPGV::gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
 
                     if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                         pTrace = currPos;
@@ -148,10 +145,10 @@ void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
             // insert after the last item
             prevCus = mRoute.end();
             prevCus--;
-            newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][mixer->id]);
-            newLastestTime = min(mixer->l, gDepot->l);
+            newEarliestTime = max(mixer->e, (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][mixer->id]);
+            newLastestTime = min(mixer->l, HPGV::gDepot->l);
 
-            newProfit = gDistance[0][mixer->id] + gDistance[mixer->id][(*prevCus)->cus->id] - gDistance[(*prevCus)->cus->id][0];
+            newProfit = HPGV::gDistance[0][mixer->id] + HPGV::gDistance[mixer->id][(*prevCus)->cus->id] - HPGV::gDistance[(*prevCus)->cus->id][0];
             if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                 pTrace = VERYLAST;
                 minProfit = newProfit;
@@ -174,18 +171,18 @@ void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
     }
     for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
         if (uIter == mRoute.begin()){
-            (*uIter)->timeArrive = gDistance[0][(*uIter)->cus->id];
-            (*uIter)->timeStartService = max((*uIter)->cus->e, gDistance[0][(*uIter)->cus->id]);
+            (*uIter)->timeArrive = HPGV::gDistance[0][(*uIter)->cus->id];
+            (*uIter)->timeStartService = max((*uIter)->cus->e, HPGV::gDistance[0][(*uIter)->cus->id]);
             (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
             (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
-            mRinfo->cost += gDistance[0][(*uIter)->cus->id];
+            mRinfo->cost += HPGV::gDistance[0][(*uIter)->cus->id];
             mRinfo->load += (*uIter)->cus->q;
         }else{
             Route::iterator beforeIter = uIter;
             beforeIter--;
-            (*uIter)->timeArrive = (*beforeIter)->timeDeparture + gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
+            (*uIter)->timeArrive = (*beforeIter)->timeDeparture + HPGV::gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
 
-            mRinfo->cost += gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
+            mRinfo->cost += HPGV::gDistance[(*uIter)->cus->id][(*beforeIter)->cus->id];
             (*uIter)->timeStartService = max((*uIter)->timeArrive, (*uIter)->cus->e);
             (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
             if ((*uIter)->timeStartService > (*uIter)->cus->l){
@@ -196,11 +193,11 @@ void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
         }
     }
     // link the last customer with depot
-    double newStartTime = mRoute.back()->timeDeparture + gDistance[0][mRoute.back()->cus->id];
-    mRinfo->cost += gDistance[0][mRoute.back()->cus->id];
+    double newStartTime = mRoute.back()->timeDeparture + HPGV::gDistance[0][mRoute.back()->cus->id];
+    mRinfo->cost += HPGV::gDistance[0][mRoute.back()->cus->id];
 
-    if (newStartTime > gDepot->l){
-        mRinfo->timeVio += (newStartTime - gDepot->l);
+    if (newStartTime > HPGV::gDepot->l){
+        mRinfo->timeVio += (newStartTime - HPGV::gDepot->l);
     }
 }
 /**
@@ -223,10 +220,10 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
             for (nextCus = mRoute.begin(), currPos = 0; nextCus != mRoute.end(); ++nextCus){
                  bool legal = true;
                  if (currPos == 0){
-                     newEarliestTime = max((*kIter)->e, gDistance[0][(*kIter)->id]);
-                     newLastestTime = min((*kIter)->l, gDepot->l);
+                     newEarliestTime = max((*kIter)->e, HPGV::gDistance[0][(*kIter)->id]);
+                     newLastestTime = min((*kIter)->l, HPGV::gDepot->l);
                      (*nextCus)->newTimeArrive = newEarliestTime + (*kIter)->d
-                             + gDistance[(*kIter)->id][(*nextCus)->cus->id];
+                             + HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id];
                      (*nextCus)->newTimeStart = max((*nextCus)->newTimeArrive, (*nextCus)->cus->e);
                      // check this insertion is feasible or not
                      if ((*nextCus)->newTimeStart > (*nextCus)->cus->l){
@@ -246,11 +243,11 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                      }
                      if (legal){
                          // calculate c_2(i, u, j)
-                         double c11 = gDistance[0][(*kIter)->id]
-                                                   + gDistance[(*kIter)->id][(*nextCus)->cus->id]
-                                                   - HPGV::I1Mu * gDistance[0][(*nextCus)->cus->id];
+                         double c11 = HPGV::gDistance[0][(*kIter)->id]
+                                                   + HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id]
+                                                   - HPGV::I1Mu * HPGV::gDistance[0][(*nextCus)->cus->id];
                          double c12 = (*nextCus)->newTimeStart - (*nextCus)->timeStartService;
-                         newProfit = HPGV::I1Lambda * gDistance[0][(*kIter)->id]
+                         newProfit = HPGV::I1Lambda * HPGV::gDistance[0][(*kIter)->id]
                                                - HPGV::I1Alpha * c11
                                                - (1 - HPGV::I1Alpha) * c12;
                          if (newProfit > maxProfit){
@@ -265,11 +262,11 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                      prevCus--;
                      newEarliestTime = max((*kIter)->e,
                              (*prevCus)->timeStartService + (*prevCus)->cus->d
-                             + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+                             + HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id]);
                      newLastestTime = min((*kIter)->l,
-                             (*nextCus)->cus->l - (*kIter)->d - gDistance[(*nextCus)->cus->id][(*kIter)->id]);
+                             (*nextCus)->cus->l - (*kIter)->d - HPGV::gDistance[(*nextCus)->cus->id][(*kIter)->id]);
                      (*nextCus)->newTimeArrive = newEarliestTime + (*kIter)->d
-                             + gDistance[(*kIter)->id][(*nextCus)->cus->id];
+                             + HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id];
                      (*nextCus)->newTimeStart = max((*nextCus)->newTimeArrive, (*nextCus)->cus->e);
                      // check this insertion is feasible or not
                      if ((*nextCus)->newTimeStart > (*nextCus)->cus->l){
@@ -289,11 +286,11 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
                      }
                      if (legal){
                          // calculate c_2(i, u, j)
-                         double c11 = gDistance[(*prevCus)->cus->id][(*kIter)->id]
-                                           + gDistance[(*kIter)->id][(*nextCus)->cus->id]
-                                           - HPGV::I1Mu*gDistance[(*prevCus)->cus->id][(*nextCus)->cus->id];
+                         double c11 = HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id]
+                                           + HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id]
+                                           - HPGV::I1Mu*HPGV::gDistance[(*prevCus)->cus->id][(*nextCus)->cus->id];
                          double c12 = (*nextCus)->newTimeStart - (*nextCus)->timeStartService;
-                         newProfit = HPGV::I1Lambda * gDistance[0][(*kIter)->id] - HPGV::I1Alpha * c11 - (1 - HPGV::I1Alpha) * c12;
+                         newProfit = HPGV::I1Lambda * HPGV::gDistance[0][(*kIter)->id] - HPGV::I1Alpha * c11 - (1 - HPGV::I1Alpha) * c12;
                          if (newProfit > maxProfit){
                              maxProfit = newProfit;
                              pTrace = currPos;
@@ -307,12 +304,12 @@ void HGAGenome::SolomonI1(Route& mRoute, RinfoPtr& mRinfo, VCus& arrCus){
             // insert at the end of route
             prevCus = mRoute.end();
             prevCus--;
-            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
-            newLastestTime = min((*kIter)->l, gDepot->l);
+            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+            newLastestTime = min((*kIter)->l, HPGV::gDepot->l);
             if (newEarliestTime < newLastestTime){
-                double c11 = gDistance[(*prevCus)->cus->id][(*kIter)->id] + gDistance[(*kIter)->id][0] - HPGV::I1Mu * gDistance[(*prevCus)->cus->id][0];
-                double c12 = newEarliestTime + (*kIter)->d + gDistance[(*kIter)->id][0] - (*prevCus)->timeStartService - (*prevCus)->cus->d - gDistance[(*prevCus)->cus->id][0];
-                newProfit = HPGV::I1Lambda * gDistance[0][(*kIter)->id] - HPGV::I1Alpha * c11 - (1 - HPGV::I1Alpha) * c12;
+                double c11 = HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id] + HPGV::gDistance[(*kIter)->id][0] - HPGV::I1Mu * HPGV::gDistance[(*prevCus)->cus->id][0];
+                double c12 = newEarliestTime + (*kIter)->d + HPGV::gDistance[(*kIter)->id][0] - (*prevCus)->timeStartService - (*prevCus)->cus->d - HPGV::gDistance[(*prevCus)->cus->id][0];
+                newProfit = HPGV::I1Lambda * HPGV::gDistance[0][(*kIter)->id] - HPGV::I1Alpha * c11 - (1 - HPGV::I1Alpha) * c12;
                 if (newProfit > maxProfit){
                     maxProfit = newProfit;
                     pTrace = VERYLAST;
@@ -358,10 +355,10 @@ void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arr
                 vod = iDay * HPGV::mVeh + iVeh;
                 // for (i-1, i) \in r
                 if (m_route[vod].empty()){
-                    newEarliestTime = max((*kIter)->e, gDistance[0][(*kIter)->id]);
+                    newEarliestTime = max((*kIter)->e, HPGV::gDistance[0][(*kIter)->id]);
                     newLastestTime = (*kIter)->l;
 
-                    newProfit = gDistance[0][(*kIter)->id];
+                    newProfit = HPGV::gDistance[0][(*kIter)->id];
                     if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                         pTrace = 0;
                         rVod = vod;
@@ -374,11 +371,11 @@ void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arr
                         // isFeasible(i, j)
                         if (currPos == 0){
                             // i - 1 means the depot
-                            newEarliestTime = max((*kIter)->e, m_data[vod]->timeLeaveDepot + gDistance[0][(*kIter)->id]);
-                            newLastestTime = min((*kIter)->l, gDepot->l);
-                            newProfit = gDistance[0][(*kIter)->id];
-                            newProfit += gDistance[(*kIter)->id][(*nextCus)->cus->id];
-                            newProfit -= gDistance[(*nextCus)->cus->id][0];
+                            newEarliestTime = max((*kIter)->e, m_data[vod]->timeLeaveDepot + HPGV::gDistance[0][(*kIter)->id]);
+                            newLastestTime = min((*kIter)->l, HPGV::gDepot->l);
+                            newProfit = HPGV::gDistance[0][(*kIter)->id];
+                            newProfit += HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id];
+                            newProfit -= HPGV::gDistance[(*nextCus)->cus->id][0];
 
                             if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                                 rVod = vod;
@@ -389,10 +386,10 @@ void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arr
                         }else{
                             prevCus = nextCus;
                             prevCus--;
-                            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
-                            newLastestTime = min((*kIter)->l, (*nextCus)->cus->l - (*kIter)->d - gDistance[(*nextCus)->cus->id][(*kIter)->id]);
+                            newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+                            newLastestTime = min((*kIter)->l, (*nextCus)->cus->l - (*kIter)->d - HPGV::gDistance[(*nextCus)->cus->id][(*kIter)->id]);
 
-                            newProfit = gDistance[(*prevCus)->cus->id][(*kIter)->id] + gDistance[(*kIter)->id][(*nextCus)->cus->id] - gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
+                            newProfit = HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id] + HPGV::gDistance[(*kIter)->id][(*nextCus)->cus->id] - HPGV::gDistance[(*nextCus)->cus->id][(*prevCus)->cus->id];
 
                             if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                                 rVod = vod;
@@ -406,10 +403,10 @@ void HGAGenome::PRheuristic(vector<Route>& m_route, RouteData& m_data, VCus& arr
                     // insert after the last item
                     prevCus = m_route[vod].end();
                     prevCus--;
-                    newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + gDistance[(*prevCus)->cus->id][(*kIter)->id]);
-                    newLastestTime = min((*kIter)->l, gDepot->l);
+                    newEarliestTime = max((*kIter)->e, (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][(*kIter)->id]);
+                    newLastestTime = min((*kIter)->l, HPGV::gDepot->l);
 
-                    newProfit = gDistance[0][(*kIter)->id] + gDistance[(*kIter)->id][(*prevCus)->cus->id] - gDistance[(*prevCus)->cus->id][0];
+                    newProfit = HPGV::gDistance[0][(*kIter)->id] + HPGV::gDistance[(*kIter)->id][(*prevCus)->cus->id] - HPGV::gDistance[(*prevCus)->cus->id][0];
                     if ((newEarliestTime < newLastestTime) && (newProfit < minProfit)){
                         rVod = vod;
                         pTrace = VERYLAST;
@@ -468,7 +465,7 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
                         }
                         if (hg.m_route[vod].size() > 0){
                             uIter = --hg.m_route[vod].end();
-                            ofs << "0 (" << (*uIter)->timeDeparture + gDistance[(*uIter)->cus->id][0] << ")\n";
+                            ofs << "0 (" << (*uIter)->timeDeparture + HPGV::gDistance[(*uIter)->cus->id][0] << ")\n";
                         }
                     }
                 }
