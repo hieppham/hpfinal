@@ -23,7 +23,7 @@ void HGAGenome::delayDeparture(Route& mRoute, RinfoPtr& mRinfo){
         }
         (*uIter)->timeStartService = max((*uIter)->cus->e, (*uIter)->timeArrive);
         (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
-        (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
+        (*uIter)->timeDeparture = (*uIter)->timeStartService + (double)(*uIter)->cus->d;
     }
 
     // Compute FTS0 using backward recursion
@@ -34,7 +34,7 @@ void HGAGenome::delayDeparture(Route& mRoute, RinfoPtr& mRinfo){
         }else{
             rprevIter = ruIter;
             rprevIter--;
-            double  tmpF = max(0, (*ruIter)->cus->l - (*ruIter)->timeStartService);
+            double  tmpF = max(0, (double)(*ruIter)->cus->l - (*ruIter)->timeStartService);
             (*ruIter)->FTS = min((*rprevIter)->FTS + (*rprevIter)->timeWait, tmpF);
         }
         sumWait += (*ruIter)->timeWait;
@@ -60,13 +60,13 @@ void HGAGenome::delayDeparture(Route& mRoute, RinfoPtr& mRinfo){
             (*uIter)->timeArrive = (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][(*uIter)->cus->id];
             mRinfo->cost += HPGV::gDistance[(*prevCus)->cus->id][(*uIter)->cus->id];
         }
-        (*uIter)->timeStartService = max((*uIter)->cus->e, (*uIter)->timeArrive);
+        (*uIter)->timeStartService = max((double)(*uIter)->cus->e, (*uIter)->timeArrive);
         (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
-        (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
+        (*uIter)->timeDeparture = (*uIter)->timeStartService + (double)(*uIter)->cus->d;
 
-        mRinfo->load += (*uIter)->cus->q;
-        if ((*uIter)->timeStartService > (*uIter)->cus->l){
-            mRinfo->timeVio += ((*uIter)->timeStartService - (*uIter)->cus->l);
+        mRinfo->load += (double)(*uIter)->cus->q;
+        if ((*uIter)->timeStartService > (double)(*uIter)->cus->l){
+            mRinfo->timeVio += ((*uIter)->timeStartService - (double)(*uIter)->cus->l);
         }
     }
     uIter = --mRoute.end();

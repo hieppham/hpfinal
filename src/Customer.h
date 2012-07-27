@@ -13,26 +13,26 @@ using namespace std;
 
 class Customer {
 public:
-    int id; // customer number
+    unsigned int id; // customer number
     double x;  // x coordinate
     double y;  // y coordinate
-    int d;  // service duration
-    int q;  // demand
-    int f;  // frequency of visit
-    int a;  // number of possible visit combinations
-    vector<int> comb;
-    int e;  // beginning of time window (earliest time for start of service)
-    int l;  // end of time window (latest time for start of service)
-    int pattern; // current pattern assigned
-    int token; // number of visits until now
+    unsigned int d;  // service duration
+    unsigned int q;  // demand
+    unsigned int f;  // frequency of visit
+    unsigned int a;  // number of possible visit combinations
+    vector<unsigned int> comb;
+    unsigned int e;  // beginning of time window (earliest time for start of service)
+    unsigned int l;  // end of time window (latest time for start of service)
+    unsigned int pattern; // current pattern assigned
+    unsigned int token; // number of visits until now
     bool isServiced; // this flag is used to mark customer as serviced or not
 
 public:
     Customer();
-    Customer(int, double, double, int, int, int, int);
-    void setTime(int te, int tl);
+    Customer(unsigned int, double, double, unsigned int, unsigned int, unsigned int, unsigned int);
+    void setTime(unsigned int te, unsigned int tl);
     void checkServiced();
-    void randomAssignedPattern(int);
+    void randomAssignedPattern(unsigned int);
     ~Customer();
 };
 
@@ -51,7 +51,7 @@ public:
     double pf;
     double FTS;
 public:
-    Vertex(Customer*);
+    Vertex(Customer*&);
     ~Vertex();
 };
 #endif /* CUSTOMER_H_ */

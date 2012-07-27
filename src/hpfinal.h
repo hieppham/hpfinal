@@ -84,6 +84,7 @@ public:
     static double gDynamicStart;
 
     static vector<vector<double> > gDistance;
+
 };
 
 inline double metric(

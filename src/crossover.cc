@@ -34,7 +34,7 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
             if (child.arrC[i].token < child.arrC[i].f){
                 int flag = (int) pow(2, (double)(HPGV::tDay - iDay - 1));
                 int flagBkp = flag;
-                for (int j = 0; j < child.arrC[j].a; j++){
+                for (unsigned int j = 0; j < child.arrC[j].a; j++){
                     flag &= child.arrC[i].comb[j];
                     if (flag == 0){
                         continue;

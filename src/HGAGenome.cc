@@ -85,7 +85,7 @@ int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGe
 
 int HGAGenome::Mutator(GAGenome& g, float pMut) {
     int nMut = 0;
-    int oldPattern, newPattern, insertMask, removeMask;
+    unsigned int oldPattern, newPattern, insertMask, removeMask;
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
@@ -102,7 +102,7 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
                 nMut++;
                 Customer* mixer = &(hg.arrC[i]);
                 oldPattern = hg.m_pattern[i];
-                int ord = GARandomInt(0, hg.arrC[i].a - 1);
+                unsigned int ord = GARandomInt(0, hg.arrC[i].a - 1);
                 while(1){
                     if (hg.arrC[i].comb[ord] != oldPattern){
                         newPattern = hg.arrC[i].comb[ord];

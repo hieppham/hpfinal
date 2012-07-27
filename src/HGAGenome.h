@@ -26,7 +26,7 @@ struct ltcid
 {
   bool operator()(const CustomerInDay* c1, const CustomerInDay* c2) const
   {
-      double tmp = c1->vod - c2->vod;
+      short tmp = c1->vod - c2->vod;
       if (tmp != 0){
           return (tmp < 0);
       }else{
@@ -70,13 +70,13 @@ public:
     static void pushbackRoute(Route&, RinfoPtr&, Customer*&);
     static void insertIntoRoute(Route&, RinfoPtr&, Customer*&, unsigned int&);
     static void PRinsert(Route&, RinfoPtr&, Customer*&);
-    static void removeFromRoute(Route&, RinfoPtr&, int);
+    static void removeFromRoute(Route&, RinfoPtr&, unsigned int);
     static void updateInfo(Route&, RinfoPtr&);
     static void SolomonI1(Route&, RinfoPtr&, VCus&);
     static void PRheuristic(vector<Route>&, RouteData&, VCus&, unsigned int&, bool);
 
     static void testRoute(Route&);
-    static bool isInRoute(Route&, int idToCheck);
+    static bool isInRoute(Route&, unsigned int);
     void updateTotalVio(void);
     void tourConstruct(void);
 

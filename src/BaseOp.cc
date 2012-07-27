@@ -188,7 +188,7 @@ void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
                 mRinfo->timeVio += ((*uIter)->timeStartService - (*uIter)->cus->l);
             }
             (*uIter)->timeDeparture = (*uIter)->timeStartService + (*uIter)->cus->d;
-            mRinfo->load += (*uIter)->cus->q;
+            mRinfo->load += (double)(*uIter)->cus->q;
         }
     }
     // link the last customer with depot
@@ -478,7 +478,7 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
     }
 }
 
-void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, int idToErase){
+void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, unsigned int idToErase){
     if (mRoute.empty()){
         return;
     }
@@ -538,7 +538,7 @@ void HGAGenome::testRoute(Route& mRoute){
 /**
  * check if one customer is in given route or not
  */
-bool HGAGenome::isInRoute(Route& mRoute, int idToCheck){
+bool HGAGenome::isInRoute(Route& mRoute, unsigned int idToCheck){
     for (Route::iterator r = mRoute.begin(), e = mRoute.end(); r != e; ++r){
         if ((*r)->cus->id == idToCheck){
             return true;

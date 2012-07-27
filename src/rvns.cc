@@ -100,12 +100,11 @@ HGAGenome HGAGenome::Shaking(HGAGenome& hgenome, unsigned int k, double pRev){
 
 HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hg(hgenome);
-    int oldPattern, newPattern, insertMask, removeMask;
+    unsigned int oldPattern, newPattern, insertMask, removeMask;
 
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
-    unsigned int newVod = 0;
     VCus tmpCus(0);
 
     // move to neighbor by changing pattern up to k time(s)
@@ -115,7 +114,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
     do {
         // select customer that has more than 1 pattern
-        int rc = GARandomInt(0, HPGV::nCus - 1);
+        unsigned int rc = GARandomInt(0, HPGV::nCus - 1);
         if (hg.arrC[rc].a > 1){
             Customer* mixer = &(hg.arrC[rc]);
             oldPattern = hg.m_pattern[rc];

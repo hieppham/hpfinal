@@ -13,6 +13,15 @@ bool compareAngular(const Customer* c1, const Customer* c2) {
 bool compareEndingTime(Customer* c1, Customer* c2) {
     return ((c1->l - c2->l) > 0);
 }
+struct endingTimeLess {
+    bool operator ()(Customer* const& c1, Customer* const& c2) const {
+
+        if (c1->l > c2->l) return true;
+
+        return false;
+    }
+};
+
 /**
  * compare the metrics from 2 customers to the depot
  * ====================================
@@ -66,7 +75,7 @@ void HGAGenome::initSolomon(unsigned int& iDay, Route& mRoute, VCus& mArr, Rinfo
     }
     // TODO: initSolomon() - start route
     // start new route, so we find the "closest" customer to the depot
-    sort(mArr.begin(), mArr.end(), compareEndingTime);
+    sort(mArr.begin(), mArr.end(), endingTimeLess());
 
     HGAGenome::pushbackRoute(mRoute, mRinfo, mArr.back());
     mArr.back()->checkServiced();
