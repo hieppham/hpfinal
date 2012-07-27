@@ -169,7 +169,7 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
         int bitFlag = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
-            for (cusinday::iterator cIter = tmpTour.begin(), endIter = tmpTour.end(); cIter != endIter; ++cIter){
+            for (cusinday::iterator cIter = tmpTour.begin(); cIter != tmpTour.end(); ++cIter){
                 if ((*cIter)->vod == (int)vod){
                     int bcid = (*cIter)->cid - 1;
 
@@ -247,15 +247,9 @@ void HGAGenome::modifyEachCustomer(void){
                 bool needServiced = true;
                 for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                     unsigned int currVod = iDay * HPGV::mVeh + iVeh;
-                    if (this->m_route[currVod].empty()){
-                        continue;
-                    }else{
-                        for (uIter = this->m_route[currVod].begin(), endIter = this->m_route[currVod].end(); uIter != endIter; ++uIter){
-                            if ((*uIter)->cus->id == mixer->id){
-                                needServiced = false;
-                                break;
-                            }
-                        }
+                    if (HGAGenome::isInRoute(this->m_route[currVod], mixer->id)){
+                        needServiced = false;
+                        break;
                     }
                 }
                 // here we insert customer into one route of this day
@@ -267,15 +261,9 @@ void HGAGenome::modifyEachCustomer(void){
             }else if (flagRemove){
                 for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                     vod = iDay * HPGV::mVeh + iVeh;
-                    if (this->m_route[vod].empty()){
-                        continue;
-                    }else{
-                        for (uIter = this->m_route[vod].begin(), endIter = this->m_route[vod].end(); uIter != endIter; ++uIter){
-                            if ((*uIter)->cus->id == mixer->id){
-                                HGAGenome::removeFromRoute(this->m_route[vod], this->m_data[vod], mixer->id);
-                                break;
-                            }
-                        }
+                    if (HGAGenome::isInRoute(this->m_route[vod], mixer->id)){
+                        HGAGenome::removeFromRoute(this->m_route[vod], this->m_data[vod], mixer->id);
+                        break;
                     }
                 }
             }

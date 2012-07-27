@@ -76,6 +76,7 @@ public:
     static void PRheuristic(vector<Route>&, RouteData&, VCus&, unsigned int&, bool);
 
     static void testRoute(Route&);
+    static bool isInRoute(Route&, int idToCheck);
     void updateTotalVio(void);
     void tourConstruct(void);
 

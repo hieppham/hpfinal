@@ -161,7 +161,6 @@ void HGAGenome::PRinsert(Route& mRoute, RinfoPtr& mRinfo, Customer*& mixer){
         // Insert (i*, j*) and Update(r*)
         HGAGenome::insertIntoRoute(mRoute, mRinfo, mixer, pTrace);
     }
-    cout << "PRinsert\n";
 }
 
 void HGAGenome::updateInfo(Route& mRoute, RinfoPtr& mRinfo){
@@ -449,7 +448,7 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
                 for (iDay = 0; iDay < HPGV::tDay; iDay++){
                     for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                         vod = iDay*HPGV::mVeh + iVeh;
-                        Route::iterator uIter, endIter;
+                        Route::const_iterator uIter, endIter;
                         for (uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
                             if (uIter == hg.m_route[vod].begin()){
                                 ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
@@ -483,7 +482,7 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, int idToErase){
     if (mRoute.empty()){
         return;
     }
-    for (Route::iterator uIter = mRoute.begin(), endIter = mRoute.end(); uIter != endIter; ++uIter){
+    for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
         if ((*uIter)->cus->id == idToErase){
             mRoute.erase(uIter);
             break;
@@ -501,7 +500,7 @@ void HGAGenome::tourConstruct(void){
 
     this->m_tour.clear();
     for (unsigned int vod = 0; vod < (HPGV::numRoute); vod++){
-        for (Route::iterator rIter = this->m_route[vod].begin(), endIter = this->m_route[vod].end(); rIter != endIter; ++rIter){
+        for (Route::const_iterator rIter = this->m_route[vod].begin(); rIter != this->m_route[vod].end(); ++rIter){
             this->m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
         }
     }
@@ -534,4 +533,16 @@ void HGAGenome::testRoute(Route& mRoute){
     if (flag){
         cout << "testRoute OK\n";
     }
+}
+
+/**
+ * check if one customer is in given route or not
+ */
+bool HGAGenome::isInRoute(Route& mRoute, int idToCheck){
+    for (Route::iterator r = mRoute.begin(), e = mRoute.end(); r != e; ++r){
+        if ((*r)->cus->id == idToCheck){
+            return true;
+        }
+    }
+    return false;
 }

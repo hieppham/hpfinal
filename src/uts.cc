@@ -107,8 +107,7 @@ HGAGenome HGAGenome::UTS(HGAGenome& hg){
 //                }
 //            }
 
-            if (HGAGenome::UTSNeighborByRouting(bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
-                HGAGenome::printSolution(bestNeighbor, "utsRouting.txt");
+            if (HGAGenome::UTSNeighborByPattern(bestNeighbor, g_tabu, pFreq, it, tabuLength, aQ, bD, cW)){
                 break;
             }
         }
@@ -221,15 +220,9 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                             // for r \in R
                             currVod = iDay * HPGV::mVeh + iVeh;
-                            if (hg.m_route[currVod].empty()){
-                                continue;
-                            }else{
-                                for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
-                                    if ((*uIter)->cus->id == mixer->id){
-                                        needServiced = false;
-                                        break;
-                                    }
-                                }
+                            if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                                needServiced = false;
+                                break;
                             }
                         }
                         // insert into one route of this day
@@ -241,7 +234,6 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                                 if (!isTabu(mixer->id, newVod, g_tabu)){
                                     HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
                                     needServiced = false;
-                                    HGAGenome::testRoute(hg.m_route[newVod]);
                                     break;
                                 }
                             }
@@ -250,7 +242,6 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                             int randVeh = GARandomInt(0, HPGV::mVeh - 1);
                             newVod = iDay * HPGV::mVeh + randVeh;
                             HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
-                            HGAGenome::testRoute(hg.m_route[newVod]);
                         }
                     }else if (flagRemove){
                         // remove customer from current day
@@ -260,23 +251,21 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                             if (hg.m_route[currVod].empty()){
                                 continue;
                             }else{
-                                for (Route::iterator uIter = hg.m_route[currVod].begin(); uIter != hg.m_route[currVod].end(); ++uIter){
-                                    if ((*uIter)->cus->id == mixer->id){
-                                        HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
+                                if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                                    HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
 
-                                        HGAGenome::testRoute(hg.m_route[currVod]);
+                                    // HGAGenome::testRoute(hg.m_route[currVod]);
 
-                                        CustomerInDay* key = new CustomerInDay(mixer->id, currVod);
-                                        TabuMap::iterator pos = g_tabu.find(key);
-                                        if (pos == g_tabu.end()){
-                                            g_tabu.insert(make_pair(key, 0));
-                                        }else{
-                                            pos->second++;
-                                        }
-                                        delete key;
-
-                                        break;
+                                    CustomerInDay* key = new CustomerInDay(mixer->id, currVod);
+                                    TabuMap::iterator pos = g_tabu.find(key);
+                                    if (pos == g_tabu.end()){
+                                        g_tabu.insert(make_pair(key, 0));
+                                    }else{
+                                        pos->second++;
                                     }
+                                    delete key;
+
+                                    break;
                                 }
                             }
                         }
@@ -291,7 +280,6 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         counter++;
     }
     // TODO: UTSNeighborByPattern
-    cout << "utsPattern\n";
     return foundNewCid;
 }
 
@@ -335,16 +323,8 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     }
     if (foundNewCid){
         // now we apply routing modification for this customer
-        // remove customer from current route
 
-        for (Route::iterator rIter = hg.m_route[vod].begin(), endR = hg.m_route[vod].end(); rIter != endR; ++rIter){
-            if ((*rIter)->cus->id == cid){
-                choice = (*rIter)->cus;
-                hg.m_route[vod].erase(rIter);
-                break;
-            }
-        }
-        // then insert into new route (another vehicle, same day)
+        // insert into new route (another vehicle, same day)
         newRouteSize = hg.m_route[newVod].size();
         // initialize changes in violations of load, duration and time windows by inserting
         // new customer at the end of route
@@ -401,6 +381,17 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
         // here we found best neighbor
         hg.m_route[newVod] = bkpVodRoute;
+
+        // remove customer from current route
+
+        for (Route::iterator rIter = hg.m_route[vod].begin(), endR = hg.m_route[vod].end(); rIter != endR; ++rIter){
+            if ((*rIter)->cus->id == cid){
+                choice = (*rIter)->cus;
+                hg.m_route[vod].erase(rIter);
+                break;
+            }
+        }
+        HGAGenome::updateInfo(hg.m_route[vod], hg.m_data[vod]);
         HGAGenome::updateInfo(hg.m_route[newVod], hg.m_data[newVod]);
 
         hg.tourUpdate(pFreq);

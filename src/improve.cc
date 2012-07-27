@@ -81,7 +81,59 @@ void HGAGenome::delayDeparture(Route& mRoute, RinfoPtr& mRinfo){
  * Improve quality of solution using some local search procedures
  */
 void HGAGenome::improveRoute(HGAGenome& hg){
-    // TODO: improveRoute
+    unsigned int iDay, iVehicle, vod;
+    unsigned int i, seed1, seed2, rv1, rv2, vod1, vod2;
+
+    // penal parameters
+    double aPel, bPel, cPel;
+    double sumSq = (HPGV::avgQ * HPGV::avgQ) + (HPGV::avgD * HPGV::avgD) + (HPGV::avgW * HPGV::avgW);
+    if (sumSq == 0){
+        aPel = 100;
+        bPel = 100;
+        cPel = 100;
+    }else{
+        aPel = HPGV::hPenalty * HPGV::avgQ / sumSq;
+        bPel = HPGV::hPenalty * HPGV::avgD / sumSq;
+        cPel = HPGV::hPenalty * HPGV::avgW / sumSq;
+    }
+
+    for (iDay = 0; iDay < HPGV::tDay; iDay++){
+        // consider all possible pairs of routes in random order
+        seed1 = GARandomInt(0, HPGV::mVeh - 2);
+        seed2 = GARandomInt(seed1+1, HPGV::mVeh - 1);
+        for (i = 0; i < HPGV::mVeh; i++){
+            rv1 = (seed1 + i) % HPGV::mVeh;
+            rv2 = (seed2 + i) % HPGV::mVeh;
+
+            vod1 = iDay * HPGV::mVeh + rv1;
+            vod2 = iDay * HPGV::mVeh + rv2;
+
+            // apply inter-route operators : 2-opt*, lambda-interchange and CROSS-exchange
+            if (hg.interRouteOpt(aPel, bPel, cPel, vod1, vod2)){
+                break;
+            }
+        }
+
+        // no further improvement can be found
+        // locally improving each route of the current day in turn
+        for (iVehicle = 0; iVehicle < HPGV::mVeh; iVehicle++){
+            vod = iDay * HPGV::mVeh + iVehicle;
+            bool intraFlag = false;
+            while(!intraFlag){
+                if (hg.intra2Opt(aPel, bPel, cPel, vod)){
+                    intraFlag = false;
+                }else{
+                    intraFlag = true;
+                }
+
+                if (hg.intraOrOpt(aPel, bPel, cPel, vod)){
+                    intraFlag = false;
+                }else{
+                    intraFlag = true;
+                }
+            }
+        }
+    }
 }
 
 void HGAGenome::apply2OptForAllRoutes(double aPen, double bPen, double cPen, HGAGenome& hg){

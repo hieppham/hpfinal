@@ -130,15 +130,9 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
                         bool needServiced = true;
                         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                             unsigned int currVod = iDay * HPGV::mVeh + iVeh;
-                            if (hg.m_route[currVod].empty()){
-                                continue;
-                            }else{
-                                for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
-                                    if ((*uIter)->cus->id == mixer->id){
-                                        needServiced = false;
-                                        break;
-                                    }
-                                }
+                            if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                                needServiced = false;
+                                break;
                             }
                         }
                         // here we insert customer into one route of this day
@@ -150,15 +144,9 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
                     }else if (flagRemove){
                         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                             vod = iDay * HPGV::mVeh + iVeh;
-                            if (hg.m_route[vod].empty()){
-                                continue;
-                            }else{
-                                for (Route::iterator uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
-                                    if ((*uIter)->cus->id == mixer->id){
-                                        HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
-                                        break;
-                                    }
-                                }
+                            if (HGAGenome::isInRoute(hg.m_route[vod], mixer->id)){
+                                HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
+                                break;
                             }
                         }
                     }
@@ -189,8 +177,8 @@ int HGAGenome::Education(GAGenome& g, const int CNG){
 //        hg = HGAGenome::RVNS(hg);
 //        // TODO: pattern improvement
 //    }
-    hg = HGAGenome::RVNS(hg);
-    HGAGenome::improveRoute(hg);
+    hg = HGAGenome::UTS(hg);
+    // HGAGenome::improveRoute(hg);
 
     return 0;
 }

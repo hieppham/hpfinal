@@ -148,35 +148,24 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
                     for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                         // for r \in R
                         unsigned currVod = iDay * HPGV::mVeh + iVeh;
-                        if (hg.m_route[currVod].empty()){
-                            continue;
-                        }else{
-                            for (Route::iterator uIter = hg.m_route[currVod].begin(), endIter = hg.m_route[currVod].end(); uIter != endIter; ++uIter){
-                                if ((*uIter)->cus->id == mixer->id){
-                                    needServiced = false;
-                                    newVod = currVod;
-                                    break;
-                                }
-                            }
+                        if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                            needServiced = false;
+                            break;
                         }
                     }
                     // insert into one route of this day
                     if (needServiced){
-                        HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
+                        tmpCus.clear();
+                        tmpCus.push_back(mixer);
+                        HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
                     }
                 } else if (flagRemove){
                     // remove customer from current day
                     for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                         vod = iDay * HPGV::mVeh + iVeh;
-                        if (hg.m_route[vod].empty()){
-                            continue;
-                        }else{
-                            for (Route::iterator uIter = hg.m_route[vod].begin(), endIter = hg.m_route[vod].end(); uIter != endIter; ++uIter){
-                                if ((*uIter)->cus->id == mixer->id){
-                                    HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
-                                    break;
-                                }
-                            }
+                        if (HGAGenome::isInRoute(hg.m_route[vod], mixer->id)){
+                            HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
+                            break;
                         }
                     }
                 }
@@ -188,7 +177,6 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
     hg.tourConstruct();
     // HGAGenome::printSolution(hg, "ShakingPattern.txt");
-    cout << "rvns shaking pattern\n";
     return hg;
 }
 

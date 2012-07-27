@@ -149,7 +149,7 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
                 for (iDay = 0; iDay < HPGV::tDay; iDay++){
                     for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                         vod = iDay*HPGV::mVeh + iVeh;
-                        Route::iterator uIter, endIter;
+                        Route::const_iterator uIter, endIter;
                         for (uIter = bestSol.m_route[vod].begin(), endIter = bestSol.m_route[vod].end(); uIter != endIter; ++uIter){
                             if (uIter == bestSol.m_route[vod].begin()){
                                 ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
