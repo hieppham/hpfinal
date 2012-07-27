@@ -22,7 +22,6 @@ CustomerInDay::~CustomerInDay(){
  */
 void HGAGenome::Initializer(GAGenome& g) {
     unsigned int ic = 1; // index of customer
-    // TODO: complete code here.
     HGAGenome & hg = (HGAGenome &) g;
     vector<Customer*> refArr;
     refArr.resize(HPGV::nCus);
@@ -178,7 +177,7 @@ int HGAGenome::Education(GAGenome& g, const int CNG){
 //        // TODO: pattern improvement
 //    }
     hg = HGAGenome::UTS(hg);
-    // HGAGenome::improveRoute(hg);
+    HGAGenome::improveRoute(hg);
 
     return 0;
 }
