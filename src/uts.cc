@@ -21,6 +21,7 @@ double utsPenalty(HGAGenome& hs, HGAGenome& hg, vector<vector<int> >& pFreq){
  * update tabu list
  */
 void updateTabuMap(TabuMap& tabuMap, int& tabuLength){
+    // TODO: fix here
     TabuMap::iterator pos;
     for (pos = tabuMap.begin(); pos != tabuMap.end(); ){
         (*pos).second++;
@@ -35,10 +36,9 @@ void updateTabuMap(TabuMap& tabuMap, int& tabuLength){
 /**
  * check tabu status
  */
-bool isTabu(int cid, unsigned int vod, TabuMap& tabuMap){
-    CustomerInDay* key = new CustomerInDay(cid, vod);
+bool isTabu(unsigned int cid, unsigned int vod, TabuMap& tabuMap){
+    unsigned int key = (unsigned int)POSINF * cid + vod;
     TabuMap::iterator pos = tabuMap.find(key);
-    delete key;
     return (pos != tabuMap.end());
 }
 
@@ -175,6 +175,10 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         int rc = GARandomInt(0, HPGV::nCus - 1);
         if (hg.arrC[rc].a > 1){
             Customer* mixer = &(hg.arrC[rc]);
+
+            // TODO: remove after debugging
+            cout << "180\n";
+
             oldPattern = hg.m_pattern[rc];
             int ord = GARandomInt(0, hg.arrC[rc].a - 1);
             while (1){
@@ -219,6 +223,7 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                     if (flagInsert){
                         // check if this customer has been serviced on current day
                         bool needServiced = true;
+
                         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
                             // for r \in R
                             currVod = iDay * HPGV::mVeh + iVeh;
@@ -239,12 +244,17 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                                     break;
                                 }
                             }
+                            // TODO: remove after debugging
+                            cout << "248\n";
                         }
                         if (needServiced){
-                            tmpCus.clear();
-                            tmpCus.push_back(mixer);
-                            HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                            newVeh = GARandomInt(0, HPGV::mVeh - 1);
+                            newVod = iDay * HPGV::mVeh + newVeh;
+                            HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
+                            // TODO: remove after debugging
+                            cout << "255\n";
                         }
+                        HGAGenome::printSolution(hg, "utsPattern.txt");
                     }else if (flagRemove){
                         // remove customer from current day
                         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
@@ -255,17 +265,19 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                             }else{
                                 if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
                                     HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
+                                    // TODO: remove after debugging
+                                    cout << "269\n";
 
                                     // HGAGenome::testRoute(hg.m_route[currVod]);
+                                    HGAGenome::printSolution(hg, "utsPattern.txt");
 
-                                    CustomerInDay* key = new CustomerInDay(mixer->id, currVod);
+                                    unsigned int key = (unsigned int)POSINF * (mixer->id) + currVod;
                                     TabuMap::iterator pos = g_tabu.find(key);
-                                    if (pos == g_tabu.end()){
-                                        g_tabu.insert(make_pair(key, 0));
-                                    }else{
+                                    if (pos != g_tabu.end()){
                                         pos->second++;
+                                    }else{
+                                        g_tabu.insert(make_pair(key, 0));
                                     }
-                                    delete key;
 
                                     break;
                                 }
@@ -398,10 +410,9 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         hg.updateTotalVio();
 
         // update tabu list
-        CustomerInDay* key = new CustomerInDay(cid, vod);
+        unsigned int key = (unsigned int)POSINF * cid + vod;
         g_tabu.insert(make_pair(key, 0));
         updateTabuMap(g_tabu, tabuLength);
-        delete key;
     }
 
     return foundNewCid;

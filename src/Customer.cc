@@ -23,6 +23,24 @@ Customer::Customer(){
     this->token = 0;
     this->isServiced = false;
 }
+
+Customer::Customer(const Customer & orig){
+    this->id = orig.id;
+    this->x = orig.x;
+    this->y = orig.y;
+    this->d = orig.d;
+    this->q = orig.q;
+    this->f = orig.f;
+    this->a = orig.a;
+    this->comb = orig.comb;
+
+    this->e = orig.e;
+    this->l = orig.l;
+
+    this->pattern = orig.pattern;
+    this->token = orig.token;
+    this->isServiced = false;
+}
 Customer::Customer(unsigned int tid, double tx, double ty, unsigned int td, unsigned int tq, unsigned int tf, unsigned int ta) {
     // TODO Auto-generated constructor stub
     this->id = tid;
@@ -59,7 +77,7 @@ Customer::~Customer() {
 }
 
 Vertex::Vertex(Customer*& c){
-    this->cus = c;
+    this->cus = new Customer(*c);
     this->timeArrive = 0;
     this->timeStartService = 0;
     this->timeWait = 0;

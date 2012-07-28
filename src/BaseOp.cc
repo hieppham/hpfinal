@@ -460,6 +460,7 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
                             }
                             if (((*uIter)->cus->id < 1) || ((*uIter)->cus->id > HPGV::nCus)){
                                 ofs << "####################################";
+                                cout << "Caught it!!!" << endl;
                             }
                         }
                         if (hg.m_route[vod].size() > 0){
@@ -482,12 +483,13 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, unsigned int id
     if (mRoute.empty()){
         return;
     }
+    Route newRoute;
     for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
-        if ((*uIter)->cus->id == idToErase){
-            mRoute.erase(uIter);
-            break;
+        if ((*uIter)->cus->id != idToErase){
+            newRoute.push_back(VertexPtr(new Vertex((*uIter)->cus)));
         }
     }
+    mRoute = newRoute;
     // update information
     HGAGenome::updateInfo(mRoute, mRinfo);
 }

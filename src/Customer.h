@@ -29,6 +29,7 @@ public:
 
 public:
     Customer();
+    Customer(const Customer & orig);
     Customer(unsigned int, double, double, unsigned int, unsigned int, unsigned int, unsigned int);
     void setTime(unsigned int te, unsigned int tl);
     void checkServiced();

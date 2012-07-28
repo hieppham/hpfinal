@@ -46,7 +46,7 @@ typedef std::list<VertexPtr> Route;
 
 typedef vector<Customer*> VCus;
 
-typedef map<CustomerInDay*, int, ltcid> TabuMap;
+typedef map<unsigned int, int> TabuMap;
 
 class HGAGenome: public GAGenome {
 public:
