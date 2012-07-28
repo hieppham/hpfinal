@@ -49,7 +49,7 @@ HPGradProjectGA::step()
         mom = &(pop->select());
         stats.numsel += 1;
         tmpPop->individual(i).copy(*mom);
-        // HGAGenome::UTS((HGAGenome &)tmpPop->individual(i));
+        HGAGenome::UTS((HGAGenome &)tmpPop->individual(i));
         HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
         stats.numeval += 1;
     }

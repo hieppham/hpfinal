@@ -53,8 +53,6 @@ void HGAGenome::Initializer(GAGenome& g) {
 float HGAGenome::Evaluator(GAGenome& g) {
     HGAGenome & hgenome = (HGAGenome &) g;
     return (float)(HGAGenome::calcObjectValue(hgenome));
-
-    return 0;
 }
 
 int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGenome* d) {
@@ -170,13 +168,12 @@ int HGAGenome::Mutator(GAGenome& g, float pMut) {
 int HGAGenome::Education(GAGenome& g, const int CNG){
     HGAGenome & hg = (HGAGenome &) g;
 
-//    if ((CNG % 2) == 0){
-//        hg = HGAGenome::UTS(hg);
-//    }else{
-//        hg = HGAGenome::RVNS(hg);
-//        // TODO: pattern improvement
-//    }
-    hg = HGAGenome::UTS(hg);
+    if ((CNG % 2) == 0){
+        hg = HGAGenome::UTS(hg);
+    }else{
+        hg = HGAGenome::RVNS(hg);
+        // TODO: pattern improvement
+    }
     HGAGenome::improveRoute(hg);
 
     return 0;

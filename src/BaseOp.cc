@@ -81,7 +81,6 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus
         }
         mRoute.insert(pos, VertexPtr(new Vertex(mCus)));
         pos--;
-        // TODO: update information for all customers
         HGAGenome::updateInfo(mRoute, mRinfo);
     }
 }
@@ -483,13 +482,12 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, unsigned int id
     if (mRoute.empty()){
         return;
     }
-    Route newRoute;
     for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
-        if ((*uIter)->cus->id != idToErase){
-            newRoute.push_back(VertexPtr(new Vertex((*uIter)->cus)));
+        if ((*uIter)->cus->id == idToErase){
+            mRoute.erase(uIter);
+            break;
         }
     }
-    mRoute = newRoute;
     // update information
     HGAGenome::updateInfo(mRoute, mRinfo);
 }

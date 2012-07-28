@@ -88,11 +88,11 @@ HGAGenome HGAGenome::Shaking(HGAGenome& hgenome, unsigned int k, double pRev){
     HGAGenome hgs(hgenome);
 
     if ((k >= 1) && (k <= 6)){
-        hgs = HGAGenome::ShakingMoveSegment(hgenome, k, pRev);
+        hgs = HGAGenome::ShakingPattern(hgenome, k, pRev);
     }else if ((k >= 7) && (k <= 12)){
         hgs = HGAGenome::ShakingMoveSegment(hgenome, k - 6, pRev);
     }else if ((k >= 13) && (k <= 18)){
-        hgs = HGAGenome::ShakingMoveSegment(hgenome, k - 12, pRev);
+        hgs = HGAGenome::ShakingExchangeSegments(hgenome, k - 12, pRev);
     }
 
     return hgs;
@@ -128,6 +128,7 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
                 ord %= hg.arrC[rc].a;
             }
             hg.m_pattern[rc] = newPattern;
+            hg.arrC[rc].pattern = newPattern;
 
             insertMask = newPattern;
             removeMask = oldPattern;

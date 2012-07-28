@@ -410,7 +410,7 @@ bool HGAGenome::interCrossExchange(double aPel, double bPel, double cPel, unsign
     bestSecond = this->m_route[vod2];
 
     HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
-    delayDeparture(this->m_route[vod2], this->m_data[vod2]);
+    HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
     minCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
     minCost += cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 

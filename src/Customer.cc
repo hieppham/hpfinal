@@ -6,6 +6,7 @@
  */
 
 #include "Customer.h"
+#include "hpfinal.h"
 
 Customer::Customer(){
     this->id = 0;
@@ -38,8 +39,8 @@ Customer::Customer(const Customer & orig){
     this->l = orig.l;
 
     this->pattern = orig.pattern;
-    this->token = orig.token;
-    this->isServiced = false;
+    this->token = numberOfSetBits(this->pattern);
+    this->isServiced = orig.isServiced;
 }
 Customer::Customer(unsigned int tid, double tx, double ty, unsigned int td, unsigned int tq, unsigned int tf, unsigned int ta) {
     // TODO Auto-generated constructor stub
