@@ -172,7 +172,6 @@ int HGAGenome::Education(GAGenome& g, const int CNG){
         hg = HGAGenome::UTS(hg);
     }else{
         hg = HGAGenome::RVNS(hg);
-        // TODO: pattern improvement
     }
     HGAGenome::improveRoute(hg);
 

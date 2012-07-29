@@ -6,7 +6,6 @@ HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
     durationCost = initCost;
 }
 HGAGenome::~HGAGenome() {
-    // TODO Auto-generated destructor stub
 }
 
 void HGAGenome::copy(const GAGenome& g) {

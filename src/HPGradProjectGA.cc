@@ -44,7 +44,7 @@ HPGradProjectGA::step()
 
         stats.numeval += c1 + c2;
     }
-    // TODO: fix here!
+
     for (i = HPGV::nPop; i < tmpPop->size(); i++){
         mom = &(pop->select());
         stats.numsel += 1;

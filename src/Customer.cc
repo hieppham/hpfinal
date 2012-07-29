@@ -43,7 +43,6 @@ Customer::Customer(const Customer & orig){
     this->isServiced = orig.isServiced;
 }
 Customer::Customer(unsigned int tid, double tx, double ty, unsigned int td, unsigned int tq, unsigned int tf, unsigned int ta) {
-    // TODO Auto-generated constructor stub
     this->id = tid;
     this->x = tx;
     this->y = ty;
@@ -74,7 +73,6 @@ void Customer::randomAssignedPattern(unsigned int idx){
     this->pattern = this->comb[idx];
 }
 Customer::~Customer() {
-    // TODO Auto-generated destructor stub
 }
 
 Vertex::Vertex(Customer*& c){
@@ -90,4 +88,5 @@ Vertex::Vertex(Customer*& c){
     this->FTS = 0;
 }
 Vertex::~Vertex(){
+    delete cus;
 }

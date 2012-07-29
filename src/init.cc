@@ -10,6 +10,19 @@ bool compareAngular(const Customer* c1, const Customer* c2) {
             - (c1->y - HPGV::gDepot->y) * (c2->x - HPGV::gDepot->x);
     return (areaTrapezoid > 0);
 }
+struct angularLess {
+    bool operator ()(Customer* const& c1, Customer* const& c2) const {
+
+        double areaTrapezoid = (c1->x - HPGV::gDepot->x) * (c2->y - HPGV::gDepot->y)
+                    - (c1->y - HPGV::gDepot->y) * (c2->x - HPGV::gDepot->x);
+        if (areaTrapezoid > 0) return true;
+
+        return false;
+    }
+};
+/**
+ * compareEndingTime: deprecated since July 25th, 2012
+ */
 bool compareEndingTime(Customer* c1, Customer* c2) {
     return ((c1->l - c2->l) > 0);
 }
@@ -25,17 +38,37 @@ struct endingTimeLess {
 /**
  * compare the metrics from 2 customers to the depot
  * ====================================
+ * deprecated since July 25th, 2012
  */
 bool compareMetric(Customer* c1, Customer* c2) {
     double firstMetric = metric(HPGV::gDepot, c1, 0, HPGV::gDistance);
     double secondMetric = metric(HPGV::gDepot, c2, 0, HPGV::gDistance);
     return (firstMetric - secondMetric > 0);
 }
+struct metricLess {
+    bool operator ()(Customer* const& c1, Customer* const& c2) const {
+        double firstMetric = metric(HPGV::gDepot, c1, 0, HPGV::gDistance);
+        double secondMetric = metric(HPGV::gDepot, c2, 0, HPGV::gDistance);
+        if (firstMetric > secondMetric) return true;
+
+        return false;
+    }
+};
+
 bool compareMetricDynamic(Customer* c1, Customer* c2) {
     double firstMetric = metric(HPGV::gDynamic, c1, HPGV::gDynamicStart, HPGV::gDistance);
-    double secondeMetric = metric(HPGV::gDynamic, c2, HPGV::gDynamicStart, HPGV::gDistance);
-    return (firstMetric - secondeMetric > 0);
+    double secondMetric = metric(HPGV::gDynamic, c2, HPGV::gDynamicStart, HPGV::gDistance);
+    return (firstMetric - secondMetric > 0);
 }
+struct metricDynamicLess {
+    bool operator ()(Customer* const& c1, Customer* const& c2) const {
+        double firstMetric = metric(HPGV::gDynamic, c1, HPGV::gDynamicStart, HPGV::gDistance);
+        double secondMetric = metric(HPGV::gDynamic, c2, HPGV::gDynamicStart, HPGV::gDistance);
+        if (firstMetric > secondMetric) return true;
+
+        return false;
+    }
+};
 /**
  * function initCluster() : begin inserting customers into routes in "cluster first - route second" schema
  */
@@ -73,7 +106,6 @@ void HGAGenome::initSolomon(unsigned int& iDay, Route& mRoute, VCus& mArr, Rinfo
         // all customers have been serviced that day
         return;
     }
-    // TODO: initSolomon() - start route
     // start new route, so we find the "closest" customer to the depot
     sort(mArr.begin(), mArr.end(), endingTimeLess());
 
@@ -87,7 +119,7 @@ void HGAGenome::initSolomon(unsigned int& iDay, Route& mRoute, VCus& mArr, Rinfo
         if (mArr.empty()){
             break;
         }
-        sort(mArr.begin(), mArr.end(), compareMetricDynamic);
+        sort(mArr.begin(), mArr.end(), metricDynamicLess());
         double newDuration = mRinfo->cost + HPGV::gDistance[HPGV::gDynamic->id][mArr.back()->id];
         double newStartTime = mRoute.back()->timeDeparture + HPGV::gDistance[HPGV::gDynamic->id][mArr.back()->id];
         int newLoad = mRinfo->load + mArr.back()->q;
@@ -114,7 +146,7 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
     vector<VCus> tempCluster(1, VCus(0));
     // clustering
     // sort customers in increasing order of the angle they make with the depot
-    sort(refArr.begin(), refArr.end(), compareAngular);
+    sort(refArr.begin(), refArr.end(), angularLess());
     if ((HPGV::nCus % HPGV::mVeh) == 0) {
         clusterSize = (int) (HPGV::nCus / HPGV::mVeh);
     }else{
@@ -154,12 +186,10 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
         // finish routing and calculate duration cost
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
-            // TODO: delay departure time here
         }
     }
 }
 void HGAGenome::SolomonTONNInit(VCus& refArr){
-    // TODO: SolomonTONNInit
     unsigned int iDay = 0;
     unsigned int iVeh = 0;
     unsigned int vod = 0;
@@ -199,7 +229,6 @@ void HGAGenome::SolomonTONNInit(VCus& refArr){
         // finish routing and calculate duration cost
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
-            // TODO: delay departure time here
         }
     }
 }
