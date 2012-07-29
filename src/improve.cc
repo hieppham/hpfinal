@@ -118,7 +118,6 @@ void HGAGenome::improveRoute(HGAGenome& hg){
         // locally improving each route of the current day in turn
         for (iVehicle = 0; iVehicle < HPGV::mVeh; iVehicle++){
             vod = iDay * HPGV::mVeh + iVehicle;
-            bool intraFlag = false;
             for (int ilocal = 0; ilocal < 10; ilocal++){
                 if (hg.intra2Opt(aPel, bPel, cPel, vod)){
                     break;
