@@ -4,8 +4,18 @@ HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
     evaluator(Evaluator);
     crossover(Crossover);
     durationCost = initCost;
+    isFeasible = 0;
+    totalCapacityVio = 0;
+    totalDurationVio = 0;
+    totalTimeVio = 0;
 }
 HGAGenome::~HGAGenome() {
+    // TODO: fix here
+    m_data.clear();
+    arrC.clear();
+    m_route.clear();
+    m_pattern.clear();
+    m_tour.clear();
 }
 
 void HGAGenome::copy(const GAGenome& g) {
@@ -43,7 +53,8 @@ int HGAGenome::write(ostream & os) const {
  */
 void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus){
     if (mRoute.empty()){
-        mRoute.push_back(VertexPtr(new Vertex(mCus)));
+        VertexPtr vToPush(new Vertex(mCus));
+        mRoute.push_back(vToPush);
         mRoute.back()->timeArrive = HPGV::gDistance[0][mCus->id];
         mRinfo->load = mCus->q;
         mRinfo->cost = HPGV::gDistance[0][mCus->id];
@@ -56,7 +67,9 @@ void HGAGenome::pushbackRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus){
 
         mRinfo->load += mCus->q;
         mRinfo->cost += HPGV::gDistance[mRoute.back()->cus->id][mCus->id];
-        mRoute.push_back(VertexPtr(new Vertex(mCus)));
+
+        VertexPtr vToPush(new Vertex(mCus));
+        mRoute.push_back(vToPush);
         mRoute.back()->timeArrive = newTimeArrive;
         mRoute.back()->timeStartService = newTimeStart;
 
@@ -78,7 +91,8 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus
         for (unsigned int i = 0; i < pTrace; i++){
             pos++;
         }
-        mRoute.insert(pos, VertexPtr(new Vertex(mCus)));
+        VertexPtr vToPush(new Vertex(mCus));
+        mRoute.insert(pos, vToPush);
         pos--;
         HGAGenome::updateInfo(mRoute, mRinfo);
     }
@@ -483,6 +497,7 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, unsigned int id
     }
     for (Route::iterator uIter = mRoute.begin(); uIter != mRoute.end(); ++uIter){
         if ((*uIter)->cus->id == idToErase){
+            (*uIter).reset();
             mRoute.erase(uIter);
             break;
         }
@@ -500,7 +515,8 @@ void HGAGenome::tourConstruct(void){
     this->m_tour.clear();
     for (unsigned int vod = 0; vod < (HPGV::numRoute); vod++){
         for (Route::const_iterator rIter = this->m_route[vod].begin(); rIter != this->m_route[vod].end(); ++rIter){
-            this->m_tour.push_back(CidPtr(new CustomerInDay((*rIter)->cus->id, vod)));
+            CidPtr cidTemp(new CustomerInDay((*rIter)->cus->id, vod));
+            this->m_tour.push_back(cidTemp);
         }
     }
 }

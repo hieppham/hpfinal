@@ -88,5 +88,6 @@ Vertex::Vertex(Customer*& c){
     this->FTS = 0;
 }
 Vertex::~Vertex(){
-    delete cus;
+    // cout << "vertex destructing - " << this->cus->id << "\n";
+    delete this->cus;
 }

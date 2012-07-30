@@ -15,7 +15,7 @@ CustomerInDay::CustomerInDay(int tc, unsigned int tv){
     vod = tv;
 }
 CustomerInDay::~CustomerInDay(){
-
+    // cout << "destructing cid: " << cid << " - " << vod << "\n";
 }
 /**
  * Initialize genome

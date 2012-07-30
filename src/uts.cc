@@ -56,8 +56,9 @@ void HGAGenome::tourUpdate(vector<vector<int> >& pFreq){
         for (iVehicle = 0; iVehicle < HPGV::mVeh; iVehicle++) {
             vod = iDay * HPGV::mVeh + iVehicle;
             for (Route::iterator iterRoute = this->m_route[vod].begin(); iterRoute != this->m_route[vod].end(); ++iterRoute) {
-                this->m_tour.push_back(CidPtr(new CustomerInDay((*iterRoute)->cus->id, vod)));
-                pFreq[vod][(unsigned int)(*iterRoute)->cus->id]++;
+                CidPtr cidTemp(new CustomerInDay((*iterRoute)->cus->id, vod));
+                this->m_tour.push_back(cidTemp);
+                pFreq[vod][(*iterRoute)->cus->id]++;
             }
         }
     }
@@ -334,7 +335,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         double minObj = 0;
         tempRoute.clear();
 
-        VertexPtr vChoice = VertexPtr(new Vertex(choice));
+        VertexPtr vChoice(new Vertex(choice));
 
         hg.m_route[newVod].push_back(vChoice);
         tempRoute = hg.m_route[newVod];
@@ -381,6 +382,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
         // here we found best neighbor
         hg.m_route[newVod] = bkpVodRoute;
+        vChoice.reset();
 
         // remove customer from current route
 
