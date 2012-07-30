@@ -169,7 +169,8 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
         tempCluster = cluster;
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
-            this->m_data[vod] = (RinfoPtr)(new RouteInfo());
+            RinfoPtr nDat(new RouteInfo());
+            this->m_data[vod] = nDat;
             this->m_route[vod].clear();
             HGAGenome::initCluster(iDay, this->m_route[vod], tempCluster[iVeh], this->m_data[vod]);
         }
@@ -218,7 +219,8 @@ void HGAGenome::SolomonTONNInit(VCus& refArr){
         }
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
-            this->m_data[vod] = (RinfoPtr)(new RouteInfo());
+            RinfoPtr nDat(new RouteInfo());
+            this->m_data[vod] = nDat;
             this->m_route[vod].clear();
             HGAGenome::initSolomon(iDay, this->m_route[vod], cloneArr, this->m_data[vod]);
         }

@@ -17,5 +17,5 @@ flush_frequency		10
 select_scores		15	# 1=mean, 2=max, 4=min, 8=dev, 16=div
 #select_scores		31
 number_of_generations	10
-replacement_percentage	0.6
+replacement_percentage	0.4
 #replacement_number	10

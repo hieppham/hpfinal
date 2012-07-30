@@ -41,7 +41,7 @@ bool isTabu(unsigned int cid, unsigned int vod, TabuMap& tabuMap){
     return (pos != tabuMap.end());
 }
 
-void HGAGenome::tourUpdate(vector<vector<int> >& pFreq){
+void HGAGenome::tourUpdate(vector<vector<unsigned int> >& pFreq){
     unsigned int iDay = 0;
     unsigned int iVehicle = 0;
     unsigned int vod;
@@ -71,7 +71,7 @@ HGAGenome HGAGenome::UTS(HGAGenome& hg){
 
     TabuMap g_tabu;
     // number of times attribute (i, k) has been added to the solution during the search process
-    vector<vector<int> > pFreq;
+    vector<vector<unsigned int> > pFreq;
 
     HGAGenome hs(hg);
     HGAGenome hs2(hg);
@@ -150,7 +150,7 @@ HGAGenome HGAGenome::UTS(HGAGenome& hg){
 /**
  * find a neighbor against pattern
  */
-bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vector<int> >& pFreq,
+bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vector<unsigned int> >& pFreq,
         int& currUtsIter, int& tabuLength, double& aQ, double& bD, double& cW){
     bool foundNewCid = false;
     unsigned int oldPattern, newPattern, insertMask, removeMask;
@@ -287,7 +287,7 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 /**
  * find a neighbor against routing
  */
-bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vector<int> >& pFreq,
+bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vector<unsigned int> >& pFreq,
         int& currUtsIter, int& tabuLength, double& aQ, double& bD, double& cW){
     bool foundNewCid = false;
     unsigned int cid, vod, currDay, currVeh, newVeh;

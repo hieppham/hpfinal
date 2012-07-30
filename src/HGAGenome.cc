@@ -26,6 +26,8 @@ void HGAGenome::Initializer(GAGenome& g) {
     vector<Customer*> refArr;
     refArr.resize(HPGV::nCus);
     hg.arrC = HPGV::gArrC;
+    hg.m_route.clear();
+    hg.m_data.clear();
     hg.m_route.resize(HPGV::numRoute);
     hg.m_data.resize(HPGV::numRoute);
     for (ic = 0; ic < HPGV::nCus; ++ic) {

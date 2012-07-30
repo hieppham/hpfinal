@@ -85,9 +85,9 @@ public:
     static double calcObjectValue(HGAGenome&);
 public:
     static HGAGenome UTS(HGAGenome&);
-    static bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
-    static bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<int> >&, int&, int&, double&, double&, double&);
-    void tourUpdate(vector<vector<int> >&);
+    static bool UTSNeighborByPattern(HGAGenome&, TabuMap&, vector<vector<unsigned int> >&, int&, int&, double&, double&, double&);
+    static bool UTSNeighborByRouting(HGAGenome&, TabuMap&, vector<vector<unsigned int> >&, int&, int&, double&, double&, double&);
+    void tourUpdate(vector<vector<unsigned int> >&);
 
     static HGAGenome RVNS(HGAGenome&);
     static HGAGenome Shaking(HGAGenome&, unsigned int, double);
