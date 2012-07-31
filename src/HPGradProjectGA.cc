@@ -48,9 +48,12 @@ HPGradProjectGA::step()
     for (i = HPGV::nPop; i < tmpPop->size(); i++){
         mom = &(pop->select());
         stats.numsel += 1;
-        tmpPop->individual(i).copy(*mom);
-        HGAGenome::UTS((HGAGenome &)tmpPop->individual(i));
-        HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
+        // tmpPop->individual(i).copy(*mom);
+        // HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
+
+        HGAGenome::Initializer(tmpPop->individual(i));
+        HGAGenome::Education(tmpPop->individual( i ), CNG);
+
         stats.numeval += 1;
     }
 
