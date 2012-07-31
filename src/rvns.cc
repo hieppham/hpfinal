@@ -42,12 +42,16 @@ HGAGenome HGAGenome::RVNS(HGAGenome& hgenome){
         while ((curNeighbor <= 18) && (curIter <= HPGV::rvnsIter)){
             k = ar[curNeighbor - 1];
             hgs = HGAGenome::Shaking(hgenome, k, HPGV::rvnsPRev);
-            HGAGenome::apply2OptForAllRoutes(aPen, bPen, cPen, hgs);
+            // HGAGenome::apply2OptForAllRoutes(aPen, bPen, cPen, hgs);
+            // update 310712: priotize stochastic strategy
+            HGAGenome::apply2OptUntilFirstImprovement(aPen, bPen, cPen, hgs);
             double newObjVal = HGAGenome::calcObjectValue(hgs);
 
             // if (s' better than s)
             if (newObjVal < curObjVal){
-                HGAGenome::apply2OptStarForAllRoutes(aPen, bPen, cPen, hgs);
+                // update 310712: priotize stochastic strategy
+                // HGAGenome::apply2OptStarForAllRoutes(aPen, bPen, cPen, hgs);
+                HGAGenome::apply2OptStarUntilFirstImprovement(aPen, bPen, cPen, hgs);
                 // s <- s'
                 orig = hgs;
                 curObjVal = newObjVal;
@@ -108,72 +112,68 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
     VCus tmpCus(0);
 
     // move to neighbor by changing pattern up to k time(s)
-    int tryCounter = 0;
-    int maxTries = 100;
     unsigned int counter = 0;
 
     do {
         // select customer that has more than 1 pattern
-        unsigned int rc = GARandomInt(0, HPGV::nCus - 1);
-        if (hg.arrC[rc].a > 1){
-            Customer* mixer = &(hg.arrC[rc]);
-            oldPattern = hg.m_pattern[rc];
-            int ord = GARandomInt(0, hg.arrC[rc].a - 1);
-            while (1){
-                if (hg.arrC[rc].comb[ord] != oldPattern){
-                    newPattern = hg.arrC[rc].comb[ord];
-                    break;
-                }
-                ord++;
-                ord %= hg.arrC[rc].a;
+        unsigned int trc = GARandomInt(0, HPGV::numOfMP - 1);
+        unsigned int rc = HPGV::multipattern[trc] - 1;
+        Customer* mixer = &(hg.arrC[rc]);
+        oldPattern = hg.m_pattern[rc];
+        int ord = GARandomInt(0, hg.arrC[rc].a - 1);
+        while (1){
+            if (hg.arrC[rc].comb[ord] != oldPattern){
+                newPattern = hg.arrC[rc].comb[ord];
+                break;
             }
-            hg.m_pattern[rc] = newPattern;
-            hg.arrC[rc].pattern = newPattern;
-
-            insertMask = newPattern;
-            removeMask = oldPattern;
-            insertMask ^= (newPattern & oldPattern);
-            removeMask ^= (newPattern & oldPattern);
-
-            // update genome by insert customer into new routes and remove it from old routes
-            for (iDay = 0; iDay < HPGV::tDay; iDay++){
-                int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay -1));
-                int flagRemove = flagInsert;
-                flagInsert &= insertMask;
-                flagRemove &= removeMask;
-
-                if (flagInsert){
-                    // check if this customer has been serviced on current day
-                    bool needServiced = true;
-                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
-                        // for r \in R
-                        unsigned currVod = iDay * HPGV::mVeh + iVeh;
-                        if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
-                            needServiced = false;
-                            break;
-                        }
-                    }
-                    // insert into one route of this day
-                    if (needServiced){
-                        tmpCus.clear();
-                        tmpCus.push_back(mixer);
-                        HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
-                    }
-                } else if (flagRemove){
-                    // remove customer from current day
-                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
-                        vod = iDay * HPGV::mVeh + iVeh;
-                        if (HGAGenome::isInRoute(hg.m_route[vod], mixer->id)){
-                            HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
-                            break;
-                        }
-                    }
-                }
-            }
-            counter++;
+            ord++;
+            ord %= hg.arrC[rc].a;
         }
-        tryCounter++;
-    } while ((counter < k) && (tryCounter < maxTries));
+        hg.m_pattern[rc] = newPattern;
+        hg.arrC[rc].pattern = newPattern;
+
+        insertMask = newPattern;
+        removeMask = oldPattern;
+        insertMask ^= (newPattern & oldPattern);
+        removeMask ^= (newPattern & oldPattern);
+
+        // update genome by insert customer into new routes and remove it from old routes
+        for (iDay = 0; iDay < HPGV::tDay; iDay++){
+            int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay -1));
+            int flagRemove = flagInsert;
+            flagInsert &= insertMask;
+            flagRemove &= removeMask;
+
+            if (flagInsert){
+                // check if this customer has been serviced on current day
+                bool needServiced = true;
+                for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                    // for r \in R
+                    unsigned currVod = iDay * HPGV::mVeh + iVeh;
+                    if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                        needServiced = false;
+                        break;
+                    }
+                }
+                // insert into one route of this day
+                if (needServiced){
+                    tmpCus.clear();
+                    tmpCus.push_back(mixer);
+                    HGAGenome::PRheuristic(hg.m_route, hg.m_data, tmpCus, iDay, false);
+                }
+            } else if (flagRemove){
+                // remove customer from current day
+                for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                    vod = iDay * HPGV::mVeh + iVeh;
+                    if (HGAGenome::isInRoute(hg.m_route[vod], mixer->id)){
+                        HGAGenome::removeFromRoute(hg.m_route[vod], hg.m_data[vod], mixer->id);
+                        break;
+                    }
+                }
+            }
+        }
+        counter++;
+    } while (counter < k);
 
     hg.tourConstruct();
     // HGAGenome::printSolution(hg, "ShakingPattern.txt");
@@ -187,24 +187,31 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     // to another route on the same day
     unsigned int iDay, iVF, iVS, vod1, vod2, fSize, sSize;
 
-    while (1){
-        iDay = GARandomInt(0, HPGV::tDay - 1);
-        iVF = GARandomInt(0, HPGV::mVeh - 1);
+    int maxTries = 10;
+    int tryCounter = 0;
 
-        iVS = GARandomInt(0, HPGV::mVeh - 1);
-        if (iVS == iVF){
-            continue;
-        }
+    bool flagStop = true;
+
+    while (tryCounter < maxTries){
+        iDay = GARandomInt(0, HPGV::tDay - 1);
+        iVF = GARandomInt(0, HPGV::mVeh - 2);
+
+        iVS = GARandomInt(iVF + 1, HPGV::mVeh - 1);
 
         vod1 = iDay * HPGV::mVeh + iVF;
         vod2 = iDay * HPGV::mVeh + iVS;
         fSize = hg.m_route[vod1].size();
         sSize = hg.m_route[vod2].size();
         if ((fSize >= 1) && (sSize >= 1)){
+            flagStop = false;
             break;
         }
+        tryCounter++;
     }
 
+    if (flagStop){
+        return hg;
+    }
     // select a random segment of maximal length k from first route
 
     unsigned int pivot1 = GARandomInt(1, fSize);
@@ -274,13 +281,15 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     Route firstHead, firstSeg, secondSeg, secondHead;
     unsigned int iDay, iVF, iVS, vod1, vod2, fSize, sSize;
 
-    while (1){
+    int maxTries = 10;
+    int tryCounter = 0;
+    bool flagStop = true;
+
+    while (tryCounter < maxTries){
         iDay = GARandomInt(0, HPGV::tDay - 1);
-        iVF = GARandomInt(0, HPGV::mVeh - 1);
-        iVS = GARandomInt(0, HPGV::mVeh - 1);
-        if (iVF == iVS){
-            continue;
-        }
+        iVF = GARandomInt(0, HPGV::mVeh - 2);
+        iVS = GARandomInt(iVF + 1, HPGV::mVeh - 1);
+
         vod1 = iDay*HPGV::mVeh + iVF;
         vod2 = iDay*HPGV::mVeh + iVS;
 
@@ -288,8 +297,15 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
         sSize = hg.m_route[vod2].size();
 
         if ((fSize >= 1) && (sSize >= 1)){
+            flagStop = false;
             break;
         }
+
+        tryCounter++;
+    }
+
+    if (flagStop){
+        return hg;
     }
 
     unsigned int pivot1 = GARandomInt(1, fSize);

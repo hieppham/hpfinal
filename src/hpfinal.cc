@@ -47,6 +47,8 @@ double HPGV::rvnsTmax = 600;
 HGAGenome bestSol(0);
 
 vector<Customer> HPGV::gArrC(0);
+vector<unsigned int> HPGV::multipattern(0);
+unsigned int HPGV::numOfMP = 0;
 Customer* HPGV::gDepot;
 Customer* HPGV::gDynamic;
 double HPGV::gDynamicStart = 0;
@@ -88,6 +90,9 @@ int getInputData(fstream &ifs, char* filein) {
             Customer* gCustomer = new Customer(tid, tx, ty, td, tq, tf, ta);
             HPGV::gArrC.push_back(*gCustomer);
             HPGV::gArrC[tid - 1].comb.clear();
+            if (ta > 1){
+                HPGV::multipattern.push_back(tid);
+            }
             for (tempIter = 0; tempIter < ta; tempIter++) {
                 ifs >> tc;
                 HPGV::gArrC[tid - 1].comb.push_back(tc);
@@ -97,6 +102,7 @@ int getInputData(fstream &ifs, char* filein) {
             HPGV::gArrC[tid - 1].setTime(te, tl);
             delete gCustomer;
         }
+        HPGV::numOfMP = HPGV::multipattern.size();
         ifs.close();
     }else{
         cerr << "Can not open \"" << filein << "\" for input.\n";

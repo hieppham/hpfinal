@@ -163,121 +163,120 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
     VCus tmpCus(0);
 
-    int maxTries = 50;    // avoid infinite loop
+    int maxTries = 10;    // avoid infinite loop
     int counter = 0;
 
     while ((!foundNewCid) && (counter < maxTries)){
         // select customer that has more than 1 pattern
-        int rc = GARandomInt(0, HPGV::nCus - 1);
-        if (hg.arrC[rc].a > 1){
-            Customer* mixer = &(hg.arrC[rc]);
+        unsigned int trc = GARandomInt(0, HPGV::numOfMP - 1);
+        unsigned int rc = HPGV::multipattern[trc] - 1;
+        Customer* mixer = &(hg.arrC[rc]);
 
-            oldPattern = hg.m_pattern[rc];
-            int ord = GARandomInt(0, hg.arrC[rc].a - 1);
-            while (1){
-                if (hg.arrC[rc].comb[ord] != oldPattern){
-                    newPattern = hg.arrC[rc].comb[ord];
-                    break;
-                }
-                ord++;
-                ord %= hg.arrC[rc].a;
+        oldPattern = hg.m_pattern[rc];
+        int ord = GARandomInt(0, hg.arrC[rc].a - 1);
+        while (1){
+            if (hg.arrC[rc].comb[ord] != oldPattern){
+                newPattern = hg.arrC[rc].comb[ord];
+                break;
             }
-            hg.arrC[rc].pattern = newPattern;
-            insertMask = newPattern;
-            removeMask = oldPattern;
-            insertMask ^= (newPattern & oldPattern);
-            removeMask ^= (newPattern & oldPattern);
+            ord++;
+            ord %= hg.arrC[rc].a;
+        }
+        hg.arrC[rc].pattern = newPattern;
+        insertMask = newPattern;
+        removeMask = oldPattern;
+        insertMask ^= (newPattern & oldPattern);
+        removeMask ^= (newPattern & oldPattern);
 
+        for (iDay = 0; iDay < HPGV::tDay; iDay++){
+            int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
+            flagInsert &= insertMask;
+            if (flagInsert){
+                int randVeh = GARandomInt(0, HPGV::mVeh - 1);
+                for (unsigned int iv = 0; iv < HPGV::mVeh; iv++){
+                    newVeh = (randVeh + iv) % HPGV::mVeh;
+                    newVod = iDay * HPGV::mVeh + newVeh;
+                    if (!isTabu(mixer->id, newVod, g_tabu)){
+                        foundNewCid = true;
+                        break;
+                    }
+                }
+            }
+            if (foundNewCid){
+                break;
+            }
+        }
+        // update genome by insert customer into new routes and remove it from old routes
+        if (foundNewCid){
             for (iDay = 0; iDay < HPGV::tDay; iDay++){
-                int flagInsert = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
+                int flagInsert = (int) pow(2, (double)(HPGV::tDay - iDay -1));
+                int flagRemove = flagInsert;
                 flagInsert &= insertMask;
+                flagRemove &= removeMask;
+
                 if (flagInsert){
-                    int randVeh = GARandomInt(0, HPGV::mVeh - 1);
-                    for (unsigned int iv = 0; iv < HPGV::mVeh; iv++){
-                        newVeh = (randVeh + iv) % HPGV::mVeh;
-                        newVod = iDay * HPGV::mVeh + newVeh;
-                        if (!isTabu(mixer->id, newVod, g_tabu)){
-                            foundNewCid = true;
+                    // check if this customer has been serviced on current day
+                    bool needServiced = true;
+
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        // for r \in R
+                        currVod = iDay * HPGV::mVeh + iVeh;
+                        if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                            needServiced = false;
                             break;
                         }
                     }
-                }
-                if (foundNewCid){
-                    break;
-                }
-            }
-            // update genome by insert customer into new routes and remove it from old routes
-            if (foundNewCid){
-                for (iDay = 0; iDay < HPGV::tDay; iDay++){
-                    int flagInsert = (int) pow(2, (double)(HPGV::tDay - iDay -1));
-                    int flagRemove = flagInsert;
-                    flagInsert &= insertMask;
-                    flagRemove &= removeMask;
-
-                    if (flagInsert){
-                        // check if this customer has been serviced on current day
-                        bool needServiced = true;
-
-                        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
-                            // for r \in R
-                            currVod = iDay * HPGV::mVeh + iVeh;
-                            if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                    // insert into one route of this day
+                    if (needServiced){
+                        int randVeh = GARandomInt(0, HPGV::mVeh - 1);
+                        for (unsigned int iv = 0; iv < HPGV::mVeh; iv++){
+                            newVeh = (randVeh + iv) % HPGV::mVeh;
+                            newVod = iDay * HPGV::mVeh + newVeh;
+                            if (!isTabu(mixer->id, newVod, g_tabu)){
+                                HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
                                 needServiced = false;
                                 break;
                             }
                         }
-                        // insert into one route of this day
-                        if (needServiced){
-                            int randVeh = GARandomInt(0, HPGV::mVeh - 1);
-                            for (unsigned int iv = 0; iv < HPGV::mVeh; iv++){
-                                newVeh = (randVeh + iv) % HPGV::mVeh;
-                                newVod = iDay * HPGV::mVeh + newVeh;
-                                if (!isTabu(mixer->id, newVod, g_tabu)){
-                                    HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
-                                    needServiced = false;
-                                    break;
+                    }
+                    if (needServiced){
+                        newVeh = GARandomInt(0, HPGV::mVeh - 1);
+                        newVod = iDay * HPGV::mVeh + newVeh;
+                        HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
+                    }
+                    // HGAGenome::printSolution(hg, "utsPattern.txt");
+                }else if (flagRemove){
+                    // remove customer from current day
+                    for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+                        // for r \in R
+                        currVod = iDay * HPGV::mVeh + iVeh;
+                        if (hg.m_route[currVod].empty()){
+                            continue;
+                        }else{
+                            if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
+                                HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
+
+                                // HGAGenome::testRoute(hg.m_route[currVod]);
+                                // HGAGenome::printSolution(hg, "utsPattern.txt");
+
+                                unsigned int key = (unsigned int)POSINF * (mixer->id) + currVod;
+                                TabuMap::iterator pos = g_tabu.find(key);
+                                if (pos != g_tabu.end()){
+                                    pos->second++;
+                                }else{
+                                    g_tabu.insert(make_pair(key, 0));
                                 }
-                            }
-                        }
-                        if (needServiced){
-                            newVeh = GARandomInt(0, HPGV::mVeh - 1);
-                            newVod = iDay * HPGV::mVeh + newVeh;
-                            HGAGenome::PRinsert(hg.m_route[newVod], hg.m_data[newVod], mixer);
-                        }
-                        // HGAGenome::printSolution(hg, "utsPattern.txt");
-                    }else if (flagRemove){
-                        // remove customer from current day
-                        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
-                            // for r \in R
-                            currVod = iDay * HPGV::mVeh + iVeh;
-                            if (hg.m_route[currVod].empty()){
-                                continue;
-                            }else{
-                                if (HGAGenome::isInRoute(hg.m_route[currVod], mixer->id)){
-                                    HGAGenome::removeFromRoute(hg.m_route[currVod], hg.m_data[currVod], mixer->id);
 
-                                    // HGAGenome::testRoute(hg.m_route[currVod]);
-                                    // HGAGenome::printSolution(hg, "utsPattern.txt");
-
-                                    unsigned int key = (unsigned int)POSINF * (mixer->id) + currVod;
-                                    TabuMap::iterator pos = g_tabu.find(key);
-                                    if (pos != g_tabu.end()){
-                                        pos->second++;
-                                    }else{
-                                        g_tabu.insert(make_pair(key, 0));
-                                    }
-
-                                    break;
-                                }
+                                break;
                             }
                         }
                     }
                 }
-                hg.tourUpdate(pFreq);
-                hg.updateTotalVio();
-                // update tabu list
-                updateTabuMap(g_tabu, tabuLength);
             }
+            hg.tourUpdate(pFreq);
+            hg.updateTotalVio();
+            // update tabu list
+            updateTabuMap(g_tabu, tabuLength);
         }
         counter++;
     }
@@ -296,7 +295,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     Route::iterator prevCus, bestPos, uIter, saveIter;
     Route::reverse_iterator ruIter, rprevIter;
 
-    int maxTries = 50;    // avoid infinite loop
+    int maxTries = 10;    // avoid infinite loop
     int counter = 0;
 
     while ((!foundNewCid) && (counter < maxTries)){
@@ -377,6 +376,8 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
             if (newObjVal < minObj){
                 bkpVodRoute = tempRoute;
                 minObj = newObjVal;
+                // update 310712: prioritize stochastic stragety
+                break;
             }
         }
 

@@ -69,6 +69,7 @@ HPGradProjectGA::step()
     // update penalty parameters
     HGAGenome & best = (HGAGenome &) pop->best();
     if (best.isFeasible){
+        cout << "Acceptable with cost = " << best.durationCost << "\n";
         if (HPGV::bestFeasibleCost == 0){
             HPGV::bestFeasibleCost = best.durationCost;
             bestSol = best;

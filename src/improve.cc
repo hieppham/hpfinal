@@ -85,16 +85,16 @@ void HGAGenome::improveRoute(HGAGenome& hg){
     unsigned int i, seed1, seed2, rv1, rv2, vod1, vod2;
 
     // penal parameters
-    double aPel, bPel, cPel;
+    double aPen, bPen, cPen;
     double sumSq = (HPGV::avgQ * HPGV::avgQ) + (HPGV::avgD * HPGV::avgD) + (HPGV::avgW * HPGV::avgW);
     if (sumSq == 0){
-        aPel = 100;
-        bPel = 100;
-        cPel = 100;
+        aPen = 100;
+        bPen = 100;
+        cPen = 100;
     }else{
-        aPel = HPGV::hPenalty * HPGV::avgQ / sumSq;
-        bPel = HPGV::hPenalty * HPGV::avgD / sumSq;
-        cPel = HPGV::hPenalty * HPGV::avgW / sumSq;
+        aPen = HPGV::hPenalty * HPGV::avgQ / sumSq;
+        bPen = HPGV::hPenalty * HPGV::avgD / sumSq;
+        cPen = HPGV::hPenalty * HPGV::avgW / sumSq;
     }
 
     for (iDay = 0; iDay < HPGV::tDay; iDay++){
@@ -109,7 +109,7 @@ void HGAGenome::improveRoute(HGAGenome& hg){
             vod2 = iDay * HPGV::mVeh + rv2;
 
             // apply inter-route operators : 2-opt*, lambda-interchange and CROSS-exchange
-            if (hg.interRouteOpt(aPel, bPel, cPel, vod1, vod2)){
+            if (hg.interRouteOpt(aPen, bPen, cPen, vod1, vod2)){
                 break;
             }
         }
@@ -119,11 +119,11 @@ void HGAGenome::improveRoute(HGAGenome& hg){
         for (iVehicle = 0; iVehicle < HPGV::mVeh; iVehicle++){
             vod = iDay * HPGV::mVeh + iVehicle;
             for (int ilocal = 0; ilocal < 10; ilocal++){
-                if (hg.intra2Opt(aPel, bPel, cPel, vod)){
+                if (hg.intra2Opt(aPen, bPen, cPen, vod)){
                     break;
                 }
 
-                if (hg.intraOrOpt(aPel, bPel, cPel, vod)){
+                if (hg.intraOrOpt(aPen, bPen, cPen, vod)){
                     break;
                 }
             }
@@ -143,13 +143,27 @@ void HGAGenome::apply2OptForAllRoutes(double aPen, double bPen, double cPen, HGA
     hg.tourConstruct();
 }
 
+void HGAGenome::apply2OptUntilFirstImprovement(double aPen, double bPen, double cPen, HGAGenome& hg){
+    // update 310712: priotize stochastic strategy
+    unsigned int tmpvod = GARandomInt(0, HPGV::numRoute - 1);
+
+    for (unsigned i = 0; i < HPGV::numRoute; i++){
+        unsigned int vod = (tmpvod + i) % HPGV::numRoute;
+        if (hg.intra2Opt(aPen, bPen, cPen, vod)){
+            break;
+        }
+    }
+    hg.tourConstruct();
+}
+
 void HGAGenome::apply2OptStarForAllRoutes(double aPen, double bPen, double cPen, HGAGenome& hg){
+    // update 310712: priotize stochastic strategy
     unsigned int iDay, iVF, iVS, vod1, vod2;
 
     for (iDay = 0; iDay < HPGV::tDay; iDay++){
         for (iVF = 0; iVF < HPGV::mVeh - 1; iVF++){
             vod1 = iDay * HPGV::mVeh + iVF;
-            for (iVS = iVF+1; iVS < HPGV::mVeh; iVS++){
+            for (iVS = iVF + 1; iVS < HPGV::mVeh; iVS++){
                 vod2 = iDay * HPGV::mVeh + iVS;
                 hg.inter2OptStar(aPen, bPen, cPen, vod1, vod2);
             }
@@ -158,7 +172,30 @@ void HGAGenome::apply2OptStarForAllRoutes(double aPen, double bPen, double cPen,
     hg.tourConstruct();
 }
 
-bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int vod){
+void HGAGenome::apply2OptStarUntilFirstImprovement(double aPen, double bPen, double cPen, HGAGenome& hg){
+    unsigned int iDay, iVF, iVS, vod1, vod2;
+    bool improved = false;
+
+    if (HPGV::mVeh < 2){
+        return;
+    }
+
+    for (iDay = 0; iDay < HPGV::tDay; iDay++){
+        iVF = GARandomInt(0, HPGV::mVeh - 2);
+        iVS = GARandomInt(iVF + 1, HPGV::mVeh - 1);
+        vod1 = iDay * HPGV::mVeh + iVF;
+        vod2 = iDay * HPGV::mVeh + iVS;
+        if (hg.inter2OptStar(aPen, bPen, cPen, vod1, vod2)){
+            improved = true;
+            break;
+        }
+    }
+    if (improved){
+        hg.tourConstruct();
+    }
+}
+
+bool HGAGenome::intraOrOpt(double aPen, double bPen, double cPen, unsigned int vod){
     bool improved = false;
     Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;
 
@@ -171,7 +208,7 @@ bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int v
     }
 
     // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
-    double minCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
+    double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
 
@@ -192,7 +229,7 @@ bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int v
 
         lastSeg = curRoute;
 
-        while(lastSeg.size() > 0){
+        while ((lastSeg.size() > 0) && (!improved)){
             newRoute.clear();
 
             newRoute = firstSeg;
@@ -211,7 +248,7 @@ bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int v
 
             HGAGenome::updateInfo(newRoute, this->m_data[vod]);
 
-            double newCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
+            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
                 minCost = newCost;
                 bestRoute = newRoute;
@@ -219,7 +256,7 @@ bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int v
             }
         }
         count++;
-    } while (count < rSize-2);
+    } while ((count < rSize-2) && (!improved));
 
     this->m_route[vod] = bestRoute;
     HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
@@ -227,7 +264,7 @@ bool HGAGenome::intraOrOpt(double aPel, double bPel, double cPel, unsigned int v
     return improved;
 }
 
-bool HGAGenome::intra2Opt(double aPel, double bPel, double cPel, unsigned int vod){
+bool HGAGenome::intra2Opt(double aPen, double bPen, double cPen, unsigned int vod){
     bool improved = false;
 
     Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;
@@ -244,7 +281,7 @@ bool HGAGenome::intra2Opt(double aPel, double bPel, double cPel, unsigned int vo
     }
 
     // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
-    double minCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
+    double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
 
@@ -266,7 +303,7 @@ bool HGAGenome::intra2Opt(double aPel, double bPel, double cPel, unsigned int vo
         curRoute.pop_front();
         lastSeg = curRoute;
 
-        while(lastSeg.size() > lastSize){
+        while ((lastSeg.size() > lastSize) && (!improved)){
             newRoute.clear();
 
             newRoute = firstSeg;
@@ -283,7 +320,7 @@ bool HGAGenome::intra2Opt(double aPel, double bPel, double cPel, unsigned int vo
             // 0 -> i -> i-1 -> ... 2 -> 1 -> i+1 -> ...
             newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
             HGAGenome::updateInfo(newRoute, this->m_data[vod]);
-            double newCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
+            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
                 minCost = newCost;
                 bestRoute = newRoute;
@@ -291,26 +328,26 @@ bool HGAGenome::intra2Opt(double aPel, double bPel, double cPel, unsigned int vo
             }
         }
         count++;
-    } while (count < rSize);
+    } while ((count < rSize) && (!improved));
 
     this->m_route[vod] = bestRoute;
     HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
     return improved;
 }
 
-bool HGAGenome::interRouteOpt(double aPel, double bPel, double cPel, unsigned int vod1, unsigned int vod2){
+bool HGAGenome::interRouteOpt(double aPen, double bPen, double cPen, unsigned int vod1, unsigned int vod2){
     bool improved = false;
 
     int rOrder = GARandomInt(1, 2);
     if (rOrder == 1){
-        improved = this->inter2OptStar(aPel, bPel, cPel, vod1, vod2);
+        improved = this->inter2OptStar(aPen, bPen, cPen, vod1, vod2);
     }else if (rOrder == 2){
-        improved = this->interCrossExchange(aPel, bPel, cPel, vod1, vod2);
+        improved = this->interCrossExchange(aPen, bPen, cPen, vod1, vod2);
     }
     return improved;
 }
 
-bool HGAGenome::inter2OptStar(double aPel, double bPel, double cPel, unsigned int vod1, unsigned int vod2){
+bool HGAGenome::inter2OptStar(double aPen, double bPen, double cPen, unsigned int vod1, unsigned int vod2){
     bool improved = false;
 
     Route firstHead, secondHead, firstTail, secondTail, tempSeg;
@@ -327,8 +364,8 @@ bool HGAGenome::inter2OptStar(double aPel, double bPel, double cPel, unsigned in
 
     // HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
     // HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
-    minCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
-    minCost += cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
+    minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
+    minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
     for (i = 0; i <= firstSize; i++){
         curFirst = this->m_route[vod1];
@@ -364,15 +401,19 @@ bool HGAGenome::inter2OptStar(double aPel, double bPel, double cPel, unsigned in
 
             HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
             HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
-            double newCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
-            newCost += cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
+            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
+            newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
 
             if (newCost < minCost){
                 minCost = newCost;
                 bestFirst = newFirst;
                 bestSecond = newSecond;
                 improved = true;
+                break;
             }
+        }
+        if (improved){
+            break;
         }
     }
 
@@ -384,7 +425,7 @@ bool HGAGenome::inter2OptStar(double aPel, double bPel, double cPel, unsigned in
     return improved;
 }
 
-bool HGAGenome::interCrossExchange(double aPel, double bPel, double cPel, unsigned int vod1, unsigned int vod2){
+bool HGAGenome::interCrossExchange(double aPen, double bPen, double cPen, unsigned int vod1, unsigned int vod2){
     bool improved = false;
 
     Route firstHead, secondHead, firstMid, secondMid, firstTail, secondTail, tempSeg;
@@ -405,8 +446,8 @@ bool HGAGenome::interCrossExchange(double aPel, double bPel, double cPel, unsign
 
     // HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
     // HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
-    minCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
-    minCost += cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
+    minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
+    minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
     for (i = 0; i < firstSize - 1; i++){
         curFirst = this->m_route[vod1];
@@ -456,8 +497,8 @@ bool HGAGenome::interCrossExchange(double aPel, double bPel, double cPel, unsign
 
                     HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
                     HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
-                    double newCost = cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
-                    newCost += cost(aPel, bPel, cPel, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
+                    double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
+                    newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
 
                     if (newCost < minCost){
                         minCost = newCost;

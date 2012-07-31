@@ -97,8 +97,10 @@ public:
 
     static void improveRoute(HGAGenome&);
 
+    static void apply2OptUntilFirstImprovement(double, double, double, HGAGenome&);
     static void apply2OptForAllRoutes(double, double, double, HGAGenome&);
     static void apply2OptStarForAllRoutes(double, double, double, HGAGenome&);
+    static void apply2OptStarUntilFirstImprovement(double, double, double, HGAGenome&);
 
     bool inter2OptStar(double, double, double, unsigned int, unsigned int);
     bool interCrossExchange(double, double, double, unsigned int, unsigned int);

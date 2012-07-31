@@ -78,6 +78,8 @@ public:
     static double rvnsTmax;
 
     static vector<Customer> gArrC; // global variable - array of visitors
+    static vector<unsigned int> multipattern;   // IDs of customers that have more than 1 pattern
+    static unsigned int numOfMP;    // size of multipattern array
 
     static Customer* gDepot;
     static Customer* gDynamic;
