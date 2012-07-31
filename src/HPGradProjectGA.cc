@@ -15,7 +15,7 @@ HPGradProjectGA::step()
     int i, mut, c1, c2;
     GAGenome *mom, *dad;          // tmp holders for selected genomes
     int CNG = stats.generation();
-    cout << CNG <<"\n";
+    cout << CNG << endl;
     // Generate the individuals in the temporary population from individuals in
     // the main population.
 
@@ -55,7 +55,7 @@ HPGradProjectGA::step()
     }
 
     for(i=0; i<tmpPop->size(); i++)
-            pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
+            pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
     // Replace the worst genomes in the main population with all of the individuals
     // we just created.  Notice that we invoke the population's add member with a
     // genome pointer rather than reference.  This way we don't force a clone of
@@ -69,7 +69,7 @@ HPGradProjectGA::step()
     // update penalty parameters
     HGAGenome & best = (HGAGenome &) pop->best();
     if (best.isFeasible){
-        cout << "Acceptable with cost = " << best.durationCost << "\n";
+        cout << "Acceptable with cost = " << best.durationCost << endl;
         if (HPGV::bestFeasibleCost == 0){
             HPGV::bestFeasibleCost = best.durationCost;
             bestSol = best;

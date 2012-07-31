@@ -147,7 +147,7 @@ void HGAGenome::apply2OptUntilFirstImprovement(double aPen, double bPen, double 
     // update 310712: priotize stochastic strategy
     unsigned int tmpvod = GARandomInt(0, HPGV::numRoute - 1);
 
-    for (unsigned i = 0; i < HPGV::numRoute; i++){
+    for (unsigned i = 0; i < 20; i++){
         unsigned int vod = (tmpvod + i) % HPGV::numRoute;
         if (hg.intra2Opt(aPen, bPen, cPen, vod)){
             break;
@@ -367,8 +367,12 @@ bool HGAGenome::inter2OptStar(double aPen, double bPen, double cPen, unsigned in
     minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
     minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
-    for (i = 0; i <= firstSize; i++){
+    // update 310712: prioritize stochastic strategy
+    int tryCounter = 0;
+    while ((tryCounter < 10) && (!improved)){
+        // splice first route
         curFirst = this->m_route[vod1];
+        i = (unsigned int) GARandomInt(0, firstSize - 2);
 
         firstHead.clear();
         for (k = 0; k < i; k++){
@@ -377,44 +381,40 @@ bool HGAGenome::inter2OptStar(double aPen, double bPen, double cPen, unsigned in
         }
         firstTail = curFirst;
 
-        for (j = 0; j <= secondSize; j++){
-            curSecond = this->m_route[vod2];
-
-            secondHead.clear();
-            for (k = 0; k < j; k++){
-                secondHead.push_back(curSecond.front());
-                curSecond.pop_front();
-            }
-            secondTail = curSecond;
-
-            // create 2 new routes
-            newFirst.clear();
-            newSecond.clear();
-
-            newFirst = firstHead;
-            tempSeg = secondTail;
-            newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-
-            newSecond = secondHead;
-            tempSeg = firstTail;
-            newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-
-            HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
-            HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
-            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
-            newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
-
-            if (newCost < minCost){
-                minCost = newCost;
-                bestFirst = newFirst;
-                bestSecond = newSecond;
-                improved = true;
-                break;
-            }
+        // splice second route
+        curSecond = this->m_route[vod2];
+        j = (unsigned int) GARandomInt(0, secondSize - 2);
+        secondHead.clear();
+        for (k = 0; k < j; k++){
+            secondHead.push_back(curSecond.front());
+            curSecond.pop_front();
         }
-        if (improved){
-            break;
+        secondTail = curSecond;
+
+        // create 2 new routes
+        newFirst.clear();
+        newSecond.clear();
+
+        newFirst = firstHead;
+        tempSeg = secondTail;
+        newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+        newSecond = secondHead;
+        tempSeg = firstTail;
+        newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+        HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
+        HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
+        double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
+        newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
+
+        if (newCost < minCost){
+            minCost = newCost;
+            bestFirst = newFirst;
+            bestSecond = newSecond;
+            improved = true;
         }
+        tryCounter++;
     }
 
     this->m_route[vod1] = bestFirst;
@@ -449,70 +449,73 @@ bool HGAGenome::interCrossExchange(double aPen, double bPen, double cPen, unsign
     minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
     minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
-    for (i = 0; i < firstSize - 1; i++){
+    // update 310712: prioritize stochastic strategy
+    int tryCounter = 0;
+    while ((tryCounter < 10) && (!improved)){
+        // splice first route
         curFirst = this->m_route[vod1];
+
+        i = (unsigned int) GARandomInt(0, firstSize - 2);
+        mF = (unsigned int) GARandomInt(i + 1, firstSize - 1);
 
         firstHead.clear();
         for (k = 0; k < i; k++){
             firstHead.push_back(curFirst.front());
             curFirst.pop_front();
         }
-        mF = 1;
         firstTail = curFirst;
         firstMid.clear();
-        while ((mF < 4) && (!firstTail.empty())){
+        for (k = i; k <= mF; k++){
             firstMid.push_back(firstTail.front());
             firstTail.pop_front();
-
-            for (j = 0; j < secondSize - 1; j++){
-                curSecond = this->m_route[vod2];
-
-                secondHead.clear();
-                for (k = 0; k < j; k++){
-                    secondHead.push_back(curSecond.front());
-                    curSecond.pop_front();
-                }
-                mS = 1;
-                secondTail = curSecond;
-                secondMid.clear();
-
-                while ((mS < 4) && (!secondTail.empty())){
-                    secondMid.push_back(secondTail.front());
-                    secondTail.pop_front();
-                    // All segments are ready, here we create and test 2 new routes
-                    newFirst.clear();
-                    newSecond.clear();
-
-                    newFirst = firstHead;
-                    tempSeg = secondMid;
-                    newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-                    tempSeg = firstTail;
-                    newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-
-                    newSecond = secondHead;
-                    tempSeg = firstMid;
-                    newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-                    tempSeg = secondTail;
-                    newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-
-                    HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
-                    HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
-                    double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
-                    newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
-
-                    if (newCost < minCost){
-                        minCost = newCost;
-                        bestFirst = newFirst;
-                        bestSecond = newSecond;
-                        improved = true;
-                    }
-
-                    mS++;
-                }
-            }
-            mF++;
         }
 
+        // splice second route
+        curSecond = this->m_route[vod2];
+
+        j = (unsigned int) GARandomInt(0, secondSize - 2);
+        mS = (unsigned int) GARandomInt(j + 1, secondSize - 1);
+
+        secondHead.clear();
+        for (k = 0; k < j; k++){
+            secondHead.push_back(curSecond.front());
+            curSecond.pop_front();
+        }
+        secondTail = curSecond;
+        secondMid.clear();
+        for (k = j; k <= mS; k++){
+            secondMid.push_back(secondTail.front());
+            secondTail.pop_front();
+        }
+
+        // All segments are ready, here we create and test 2 new routes
+        newFirst.clear();
+        newSecond.clear();
+
+        newFirst = firstHead;
+        tempSeg = secondMid;
+        newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+        tempSeg = firstTail;
+        newFirst.splice(newFirst.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+        newSecond = secondHead;
+        tempSeg = firstMid;
+        newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+        tempSeg = secondTail;
+        newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+        HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
+        HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
+        double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
+        newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
+
+        if (newCost < minCost){
+            minCost = newCost;
+            bestFirst = newFirst;
+            bestSecond = newSecond;
+            improved = true;
+        }
+        tryCounter++;
     }
 
     this->m_route[vod1] = bestFirst;

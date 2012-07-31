@@ -161,9 +161,9 @@ int writeOutputData(fstream &ofs, char* fileout, char* inputFileName, double tot
                                 ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
                                 ofs << bestSol.m_data[vod]->cost << "\t" << bestSol.m_data[vod]->load << "\t";
                                 ofs << "0(" << bestSol.m_data[vod]->timeLeaveDepot << ")  ";
-                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                                ofs << (*uIter)->cus->id << "[" << bestSol.m_pattern[(*uIter)->cus->id - 1] << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }else{
-                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                                ofs << (*uIter)->cus->id << "[" << bestSol.m_pattern[(*uIter)->cus->id - 1] << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }
                         }
                         if (bestSol.m_route[vod].size() > 0){
