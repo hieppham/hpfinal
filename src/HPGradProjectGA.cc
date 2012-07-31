@@ -55,7 +55,7 @@ HPGradProjectGA::step()
     }
 
     for(i=0; i<tmpPop->size(); i++)
-            pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
+            pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
     // Replace the worst genomes in the main population with all of the individuals
     // we just created.  Notice that we invoke the population's add member with a
     // genome pointer rather than reference.  This way we don't force a clone of
