@@ -111,6 +111,9 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
     unsigned int vod = 0;
     VCus tmpCus(0);
 
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - shaking Pattern..." << flush;
+
     // move to neighbor by changing pattern up to k time(s)
     unsigned int counter = 0;
 
@@ -177,6 +180,9 @@ HGAGenome HGAGenome::ShakingPattern(HGAGenome& hgenome, unsigned int k, double p
 
     hg.tourConstruct();
     // HGAGenome::printSolution(hg, "ShakingPattern.txt");
+    // TODO: remove after debugging
+    // cout << "end" << endl;
+
     return hg;
 }
 
@@ -191,6 +197,9 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     int tryCounter = 0;
 
     bool flagStop = true;
+
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - rvns shaking MoveSegment..." << flush;
 
     while (tryCounter < maxTries){
         iDay = GARandomInt(0, HPGV::tDay - 1);
@@ -270,6 +279,8 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingMoveSegment.txt");
+    // TODO: remove after debugging
+    // cout << "end" << endl;
 
     return hg;
 }
@@ -284,6 +295,9 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     int maxTries = 10;
     int tryCounter = 0;
     bool flagStop = true;
+
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - rvns shaking ExchangeSegments..." << flush;
 
     while (tryCounter < maxTries){
         iDay = GARandomInt(0, HPGV::tDay - 1);
@@ -380,6 +394,8 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     hg.tourConstruct();
     hg.updateTotalVio();
     // HGAGenome::printSolution(hg, "ShakingExchangeSegments.txt");
+    // TODO: remove after debugging
+    // cout << "end" << endl;
 
     return hg;
 }

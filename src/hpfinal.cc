@@ -53,6 +53,8 @@ Customer* HPGV::gDepot;
 Customer* HPGV::gDynamic;
 double HPGV::gDynamicStart = 0;
 
+int HPGV::genCounter = 0;
+
 vector<vector<double> > HPGV::gDistance(1, vector<double>(0));
 
 /*

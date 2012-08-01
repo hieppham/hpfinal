@@ -25,7 +25,7 @@ Customer::Customer(){
     this->isServiced = false;
 }
 
-Customer::Customer(const Customer & orig){
+void Customer::copy(const Customer & orig){
     this->id = orig.id;
     this->x = orig.x;
     this->y = orig.y;

@@ -6,6 +6,7 @@
  */
 
 #include "HGAGenome.h"
+extern HGAGenome bestSol;
 
 /**
  * Some methods of class CustomerInDay
@@ -54,7 +55,20 @@ void HGAGenome::Initializer(GAGenome& g) {
 
 float HGAGenome::Evaluator(GAGenome& g) {
     HGAGenome & hgenome = (HGAGenome &) g;
-    return (float)(HGAGenome::calcObjectValue(hgenome));
+    float s = (float)(HGAGenome::calcObjectValue(hgenome));
+    if (hgenome.isFeasible){
+        cout << "***********************************************Acceptable with cost = " << hgenome.durationCost << endl;
+        if (HPGV::bestFeasibleCost == 0){
+            HPGV::bestFeasibleCost = hgenome.durationCost;
+            bestSol = hgenome;
+        }else{
+            if (HPGV::bestFeasibleCost > hgenome.durationCost){
+                HPGV::bestFeasibleCost = hgenome.durationCost;
+                bestSol = hgenome;
+            }
+        }
+    }
+    return s;
 }
 
 int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGenome* d) {
@@ -68,14 +82,14 @@ int HGAGenome::Crossover(const GAGenome& a, const GAGenome& b, GAGenome* c, GAGe
 
     if (c){
         HGAGenome& sis = (HGAGenome &) *c;
-        sis.arrC = HPGV::gArrC;
+        sis.resetAll();
         HGAGenome::explorationCrossover(p1, p2, sis);
         numOffsping++;
     }
     // and second offspring is created similarly
     if (d){
         HGAGenome& bro = (HGAGenome &) *d;
-        bro.arrC = HPGV::gArrC;
+        bro.resetAll();
         HGAGenome::exploitationCrossover(p1, p2, bro);
         numOffsping++;
     }

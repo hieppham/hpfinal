@@ -87,6 +87,8 @@ public:
 
     static vector<vector<double> > gDistance;
 
+    static int genCounter;
+
 };
 
 inline double metric(

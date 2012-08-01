@@ -29,12 +29,19 @@ public:
 
 public:
     Customer();
-    Customer(const Customer & orig);
+    Customer(const Customer & orig){
+        copy(orig);
+    }
     Customer(unsigned int, double, double, unsigned int, unsigned int, unsigned int, unsigned int);
     void setTime(unsigned int te, unsigned int tl);
     void checkServiced();
     void randomAssignedPattern(unsigned int);
-    ~Customer();
+    virtual void copy(const Customer & c);
+    Customer operator=(const Customer & arg) {
+        copy(arg);
+        return *this;
+    }
+    virtual ~Customer();
 };
 
 class Vertex{

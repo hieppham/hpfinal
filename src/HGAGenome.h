@@ -61,6 +61,8 @@ public:
     static int explorationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
     static int exploitationCrossover(const HGAGenome&, const HGAGenome&, HGAGenome&);
     static int Education(GAGenome&, const int);
+
+    void resetAll();
 public:
     void clusterFirstInit(VCus&);
     void SolomonTONNInit(VCus&);
@@ -105,6 +107,9 @@ public:
     bool inter2OptStar(double, double, double, unsigned int, unsigned int);
     bool interCrossExchange(double, double, double, unsigned int, unsigned int);
     bool interRouteOpt(double, double, double, unsigned int, unsigned int);
+
+    bool stoIntraOrOpt(double, double, double, unsigned int);
+    bool stoIntra2Opt(double, double, double, unsigned int);
 
     bool intraOrOpt(double, double, double, unsigned int);
     bool intra2Opt(double, double, double, unsigned int);

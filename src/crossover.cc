@@ -13,6 +13,9 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
     Route::iterator prevCus, nextCus, uIter, beforeIter;
     checkInherit.resize(HPGV::tDay);
 
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - exploration Crossover..." << flush;
+
     // STEP 1: Assign a pattern to each customer
     // inherit pattern assignments from parent P1
     tempSize = p1.m_tour.size();
@@ -130,8 +133,10 @@ int HGAGenome::explorationCrossover(const HGAGenome& p1, const HGAGenome& p2, HG
     // complete tour genome
     child.tourConstruct();
     child.updateTotalVio();
+
+    // TODO: remove after debugging
     // HGAGenome::printSolution(child, "childExplor.txt");
-    // cout << "ExplorationCrossover\n";
+    // cout << "end" << endl;
     child._evaluated = gaFalse;
 
     return 1;
@@ -145,6 +150,9 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
     cusinday tmpTour(0);
 
     VCus backupArr(0);
+
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - exploitation Crossover..." << flush;
 
     // initialize all routes
     child.m_pattern.resize(HPGV::nCus);
@@ -189,8 +197,11 @@ int HGAGenome::exploitationCrossover(const HGAGenome& p1, const HGAGenome& p2, H
 
     child.tourConstruct();
     child.updateTotalVio();
+
+    // TODO: remove after debugging
     // HGAGenome::printSolution(child, "childExploit.txt");
-    // cout << "ExploitationCrossover\n";
+    // cout << "end" << endl;
+
     child._evaluated = gaFalse;
 
     return 1;

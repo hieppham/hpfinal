@@ -166,6 +166,9 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     int maxTries = 10;    // avoid infinite loop
     int counter = 0;
 
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - uts Pattern..." << flush;
+
     while ((!foundNewCid) && (counter < maxTries)){
         // select customer that has more than 1 pattern
         unsigned int trc = GARandomInt(0, HPGV::numOfMP - 1);
@@ -280,6 +283,10 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         }
         counter++;
     }
+
+    // TODO: remove after debugging
+    // cout << "end" << endl;
+
     return foundNewCid;
 }
 
@@ -297,6 +304,9 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
     int maxTries = 10;    // avoid infinite loop
     int counter = 0;
+
+    // TODO: remove after debugging
+    // cout << HPGV::genCounter << " - uts Routing..." << flush;
 
     while ((!foundNewCid) && (counter < maxTries)){
         int rc = GARandomInt(0, hg.m_tour.size() - 1);
@@ -404,6 +414,9 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         g_tabu.insert(make_pair(key, 0));
         updateTabuMap(g_tabu, tabuLength);
     }
+
+    // TODO: remove after debugging
+    // cout << "end" << endl;
 
     return foundNewCid;
 }

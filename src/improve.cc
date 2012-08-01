@@ -195,7 +195,79 @@ void HGAGenome::apply2OptStarUntilFirstImprovement(double aPen, double bPen, dou
     }
 }
 
+/**
+ * intra Or-Opt operation
+ */
 bool HGAGenome::intraOrOpt(double aPen, double bPen, double cPen, unsigned int vod){
+    bool improved = false;
+    Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;
+
+    unsigned int count = 0;
+    unsigned int i;
+    unsigned int rSize = this->m_route[vod].size();
+
+    if (rSize <= 3){
+        return false;
+    }
+
+    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
+
+    bestRoute = this->m_route[vod];
+
+    do {
+        curRoute = this->m_route[vod];
+        firstSeg.clear();
+        midSeg.clear();
+        lastSeg.clear();
+        for (i = 0; i < count; i++){
+            firstSeg.push_back(curRoute.front());
+            curRoute.pop_front();
+        }
+        // middle segment contains 2 consecutive vertices
+        midSeg.push_back(curRoute.front());
+        curRoute.pop_front();
+        midSeg.push_back(curRoute.front());
+        curRoute.pop_front();
+
+        lastSeg = curRoute;
+
+        while (lastSeg.size() > 0){
+            newRoute.clear();
+
+            newRoute = firstSeg;
+
+            newRoute.push_back(lastSeg.front());    // 0 -> ... -> i-1 -> i+2 -> j
+            tempSeg = midSeg;
+            // 0 -> ... -> i-1 -> i+2 -> j -> i -> i+1
+            newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+            firstSeg.push_back(lastSeg.front());
+            lastSeg.pop_front();
+
+            tempSeg = lastSeg;
+            // 0 -> ... -> i-1 -> i+2 -> j -> i -> i+1 -> j+1 -> ...
+            newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+
+            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
+            if (newCost < minCost){
+                minCost = newCost;
+                bestRoute = newRoute;
+                improved = true;
+            }
+        }
+        count++;
+    } while (count < rSize-2);
+
+    this->m_route[vod] = bestRoute;
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
+
+    return improved;
+}
+
+bool HGAGenome::stoIntraOrOpt(double aPen, double bPen, double cPen, unsigned int vod){
     bool improved = false;
     Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;
 
@@ -265,6 +337,79 @@ bool HGAGenome::intraOrOpt(double aPen, double bPen, double cPen, unsigned int v
 }
 
 bool HGAGenome::intra2Opt(double aPen, double bPen, double cPen, unsigned int vod){
+    bool improved = false;
+
+    Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;
+    // Route::iterator uIter;
+    // RinfoPtr rInfo = (RinfoPtr)(new RouteInfo());
+
+    unsigned int count = 0;
+    unsigned int i, lastSize;
+    unsigned int rSize = this->m_route[vod].size();
+
+    if (rSize <= 2){
+        // this route has 0, 2 or 3 edge(s)
+        return false;
+    }
+
+    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
+
+    bestRoute = this->m_route[vod];
+
+    do {
+        if (count == 0){
+            lastSize = 1;
+        }else{
+            lastSize = 0;
+        }
+        curRoute = this->m_route[vod];
+        firstSeg.clear();
+        midSeg.clear();
+        lastSeg.clear();
+        for (i = 0; i < count; i++){
+            firstSeg.push_back(curRoute.front());
+            curRoute.pop_front();
+        }
+        midSeg.push_back(curRoute.front());
+        curRoute.pop_front();
+        lastSeg = curRoute;
+
+        while (lastSeg.size() > lastSize){
+            newRoute.clear();
+
+            newRoute = firstSeg;
+
+            newRoute.push_back(lastSeg.front());    // 0 -> i
+            tempSeg = midSeg;
+            // 0 -> i -> i-1 -> ... ->2
+            newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+
+            midSeg.push_front(lastSeg.front());
+            lastSeg.pop_front();
+
+            tempSeg = lastSeg;
+            // 0 -> i -> i-1 -> ... 2 -> 1 -> i+1 -> ...
+            newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
+            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+            double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
+            if (newCost < minCost){
+                minCost = newCost;
+                bestRoute = newRoute;
+                improved = true;
+            }
+        }
+        count++;
+    } while (count < rSize);
+
+    this->m_route[vod] = bestRoute;
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
+    return improved;
+}
+/**
+ * another version of 2-Opt operator, that prefers stochastic strategy
+ */
+bool HGAGenome::stoIntra2Opt(double aPen, double bPen, double cPen, unsigned int vod){
     bool improved = false;
 
     Route firstSeg, lastSeg, midSeg, tempSeg, newRoute, curRoute, bestRoute;

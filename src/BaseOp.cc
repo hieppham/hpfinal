@@ -9,6 +9,19 @@ HGAGenome::HGAGenome(int initCost) : GAGenome(Initializer, Mutator) {
     totalDurationVio = 0;
     totalTimeVio = 0;
 }
+void HGAGenome::resetAll(){
+    durationCost = 0;
+    isFeasible = false;
+    totalCapacityVio = 0;
+    totalDurationVio = 0;
+    totalTimeVio = 0;
+
+    m_data.clear();
+    arrC = HPGV::gArrC;
+    m_route.clear();
+    m_pattern.clear();
+    m_tour.clear();
+}
 HGAGenome::~HGAGenome() {
     // TODO: fix here
     m_data.clear();
@@ -19,23 +32,27 @@ HGAGenome::~HGAGenome() {
 }
 
 void HGAGenome::copy(const GAGenome& g) {
-    if (&g != this && sameClass(g)) {
-        GAGenome::copy(g); // copy the base class part
-        HGAGenome & hgenome = (HGAGenome &)g;
+    GAGenome::copy(g); // copy the base class part
+    HGAGenome & hgenome = (HGAGenome &)g;
 
-        arrC = hgenome.arrC;
-        m_route = hgenome.m_route;
-        m_data = hgenome.m_data;
+    RouteData tmp_data(hgenome.m_data);
+    vector<Customer> tmp_arrC(hgenome.arrC);
+    vector<Route> tmp_route(hgenome.m_route);
+    vector<int> tmp_pattern(hgenome.m_pattern);
+    cusinday tmp_tour(hgenome.m_tour);
 
-        m_pattern = hgenome.m_pattern;
-        m_tour = hgenome.m_tour;
+    arrC = tmp_arrC;
+    m_route = tmp_route;
+    m_data = tmp_data;
 
-        durationCost = hgenome.durationCost;
-        isFeasible = hgenome.isFeasible;
-        totalTimeVio = hgenome.totalTimeVio;
-        totalCapacityVio = hgenome.totalCapacityVio;
-        totalDurationVio = hgenome.totalDurationVio;
-    }
+    m_pattern = tmp_pattern;
+    m_tour = tmp_tour;
+
+    durationCost = hgenome.durationCost;
+    isFeasible = hgenome.isFeasible;
+    totalTimeVio = hgenome.totalTimeVio;
+    totalCapacityVio = hgenome.totalCapacityVio;
+    totalDurationVio = hgenome.totalDurationVio;
 }
 
 GAGenome*
@@ -466,9 +483,9 @@ void HGAGenome::printSolution(HGAGenome& hg, char* fileout){
                                 ofs << (iDay+1) << "  " << (iVeh + 1) << "\t";
                                 ofs << hg.m_data[vod]->cost << "\t" << hg.m_data[vod]->load << "\t";
                                 ofs << "0(" << hg.m_data[vod]->timeLeaveDepot << ")  ";
-                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                                ofs << (*uIter)->cus->id << "[" << hg.m_pattern[(*uIter)->cus->id - 1] << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }else{
-                                ofs << (*uIter)->cus->id << "[" << (*uIter)->cus->pattern << "]" << "(" << (*uIter)->timeStartService << ")  ";
+                                ofs << (*uIter)->cus->id << "[" << hg.m_pattern[(*uIter)->cus->id - 1] << "]" << "(" << (*uIter)->timeStartService << ")  ";
                             }
                             if (((*uIter)->cus->id < 1) || ((*uIter)->cus->id > HPGV::nCus)){
                                 ofs << "####################################";
