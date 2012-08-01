@@ -43,12 +43,8 @@ void HGAGenome::Initializer(GAGenome& g) {
         hg.SolomonTONNInit(refArr);
     }
 
-
-    hg.m_pattern.resize(HPGV::nCus);
-    for (unsigned int i = 0; i < HPGV::nCus; i++){
-        hg.m_pattern[i] = hg.arrC[i].pattern;
-    }
     hg.tourConstruct();
+    HGAGenome::improveRoute(hg);
 
     hg.updateTotalVio();
 }

@@ -163,7 +163,7 @@ bool HGAGenome::UTSNeighborByPattern(HGAGenome& hg, TabuMap& g_tabu, vector<vect
 
     VCus tmpCus(0);
 
-    int maxTries = 10;    // avoid infinite loop
+    int maxTries = 50;    // avoid infinite loop
     int counter = 0;
 
     // TODO: remove after debugging
@@ -302,7 +302,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
     Route::iterator prevCus, bestPos, uIter, saveIter;
     Route::reverse_iterator ruIter, rprevIter;
 
-    int maxTries = 10;    // avoid infinite loop
+    int maxTries = 50;    // avoid infinite loop
     int counter = 0;
 
     // TODO: remove after debugging

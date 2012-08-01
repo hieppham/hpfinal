@@ -58,20 +58,20 @@ HPGradProjectGA::step()
     }
 
     for (i = HPGV::nPop; i < tmpPop->size(); i++){
-        // mom = &(pop->select());
-        // stats.numsel += 1;
-        // tmpPop->individual(i).copy(*mom);
-        // HGAGenome::UTS((HGAGenome&)tmpPop->individual(i));
-        // HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
+        mom = &(pop->select());
+        stats.numsel += 1;
+        tmpPop->individual(i).copy(*mom);
+        HGAGenome::UTS((HGAGenome&)tmpPop->individual(i));
+        HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
 
-        HGAGenome::Initializer(tmpPop->individual(i));
-        HGAGenome::Education(tmpPop->individual( i ), CNG);
+        // HGAGenome::Initializer(tmpPop->individual(i));
+        // HGAGenome::Education(tmpPop->individual( i ), CNG);
 
         stats.numeval += 1;
     }
 
     for(i=0; i<tmpPop->size(); i++)
-            pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
+            pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
     // Replace the worst genomes in the main population with all of the individuals
     // we just created.  Notice that we invoke the population's add member with a
     // genome pointer rather than reference.  This way we don't force a clone of
