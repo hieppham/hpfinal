@@ -16,7 +16,7 @@ HPGradProjectGA::step()
     GAGenome *mom, *dad;          // tmp holders for selected genomes
     int CNG = stats.generation();
     HPGV::genCounter = CNG;
-    cout << CNG << endl;
+    cout << CNG << " - " << HPGV::bestFeasibleCost << endl;
     // Generate the individuals in the temporary population from individuals in
     // the main population.
 
@@ -78,8 +78,9 @@ HPGradProjectGA::step()
     // the genome - we just let the population take over.  Then we take it back by
     // doing a remove then a replace in the tmp population.
 
-    for(i=0; i<tmpPop->size(); i++)
+    for (i=0; i<tmpPop->size(); i++){
         pop->add(tmpPop->individual(i));
+    }
     pop->evaluate(gaTrue);      // get info about current pop for next time
 
     // update penalty parameters

@@ -541,7 +541,7 @@ void HGAGenome::tourConstruct(void){
 double HGAGenome::calcObjectValue(HGAGenome& hg){
     double score = 0;
 
-    // hg.updateTotalVio();
+    hg.updateTotalVio();
     score = hg.durationCost;
     // calculate score after updating parameters
     if (HPGV::hPenalty != 0){

@@ -210,7 +210,7 @@ bool HGAGenome::intraOrOpt(double aPen, double bPen, double cPen, unsigned int v
         return false;
     }
 
-    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
     double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
@@ -249,7 +249,7 @@ bool HGAGenome::intraOrOpt(double aPen, double bPen, double cPen, unsigned int v
             // 0 -> ... -> i-1 -> i+2 -> j -> i -> i+1 -> j+1 -> ...
             newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
 
-            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+            HGAGenome::delayDeparture(newRoute, this->m_data[vod]);
 
             double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
@@ -279,7 +279,7 @@ bool HGAGenome::stoIntraOrOpt(double aPen, double bPen, double cPen, unsigned in
         return false;
     }
 
-    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
     double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
@@ -318,7 +318,7 @@ bool HGAGenome::stoIntraOrOpt(double aPen, double bPen, double cPen, unsigned in
             // 0 -> ... -> i-1 -> i+2 -> j -> i -> i+1 -> j+1 -> ...
             newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
 
-            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+            HGAGenome::delayDeparture(newRoute, this->m_data[vod]);
 
             double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
@@ -352,7 +352,7 @@ bool HGAGenome::intra2Opt(double aPen, double bPen, double cPen, unsigned int vo
         return false;
     }
 
-    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
     double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
@@ -391,7 +391,7 @@ bool HGAGenome::intra2Opt(double aPen, double bPen, double cPen, unsigned int vo
             tempSeg = lastSeg;
             // 0 -> i -> i-1 -> ... 2 -> 1 -> i+1 -> ...
             newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+            HGAGenome::delayDeparture(newRoute, this->m_data[vod]);
             double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
                 minCost = newCost;
@@ -425,7 +425,7 @@ bool HGAGenome::stoIntra2Opt(double aPen, double bPen, double cPen, unsigned int
         return false;
     }
 
-    // HGAGenome::updateInfo(this->m_route[vod], this->m_data[vod]);
+    HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
     double minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod], this->m_data[vod]);
 
     bestRoute = this->m_route[vod];
@@ -464,7 +464,7 @@ bool HGAGenome::stoIntra2Opt(double aPen, double bPen, double cPen, unsigned int
             tempSeg = lastSeg;
             // 0 -> i -> i-1 -> ... 2 -> 1 -> i+1 -> ...
             newRoute.splice(newRoute.end(), tempSeg, tempSeg.begin(), tempSeg.end());
-            HGAGenome::updateInfo(newRoute, this->m_data[vod]);
+            HGAGenome::delayDeparture(newRoute, this->m_data[vod]);
             double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newRoute, this->m_data[vod]);
             if (newCost < minCost){
                 minCost = newCost;
@@ -507,8 +507,8 @@ bool HGAGenome::inter2OptStar(double aPen, double bPen, double cPen, unsigned in
     bestFirst = this->m_route[vod1];
     bestSecond = this->m_route[vod2];
 
-    // HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
-    // HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
+    HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
+    HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
     minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
     minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
@@ -548,8 +548,8 @@ bool HGAGenome::inter2OptStar(double aPen, double bPen, double cPen, unsigned in
         tempSeg = firstTail;
         newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
 
-        HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
-        HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
+        HGAGenome::delayDeparture(newFirst, this->m_data[vod1]);
+        HGAGenome::delayDeparture(newSecond, this->m_data[vod2]);
         double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
         newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
 
@@ -589,8 +589,8 @@ bool HGAGenome::interCrossExchange(double aPen, double bPen, double cPen, unsign
     bestFirst = this->m_route[vod1];
     bestSecond = this->m_route[vod2];
 
-    // HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
-    // HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
+    HGAGenome::delayDeparture(this->m_route[vod1], this->m_data[vod1]);
+    HGAGenome::delayDeparture(this->m_route[vod2], this->m_data[vod2]);
     minCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod1], this->m_data[vod1]);
     minCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(this->m_route[vod2], this->m_data[vod2]);
 
@@ -649,8 +649,8 @@ bool HGAGenome::interCrossExchange(double aPen, double bPen, double cPen, unsign
         tempSeg = secondTail;
         newSecond.splice(newSecond.end(), tempSeg, tempSeg.begin(), tempSeg.end());
 
-        HGAGenome::updateInfo(newFirst, this->m_data[vod1]);
-        HGAGenome::updateInfo(newSecond, this->m_data[vod2]);
+        HGAGenome::delayDeparture(newFirst, this->m_data[vod1]);
+        HGAGenome::delayDeparture(newSecond, this->m_data[vod2]);
         double newCost = cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newFirst, this->m_data[vod1]);
         newCost += cost(aPen, bPen, cPen, HPGV::maxLoad, HPGV::maxDuration)(newSecond, this->m_data[vod2]);
 
