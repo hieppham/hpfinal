@@ -273,8 +273,8 @@ HGAGenome HGAGenome::ShakingMoveSegment(HGAGenome& hgenome, unsigned int k, doub
     hg.m_route[vod2].clear();
     hg.m_route[vod2] = secondHead;
 
-    HGAGenome::updateInfo(hg.m_route[vod1], hg.m_data[vod1]);
-    HGAGenome::updateInfo(hg.m_route[vod2], hg.m_data[vod2]);
+    HGAGenome::delayDeparture(hg.m_route[vod1], hg.m_data[vod1]);
+    HGAGenome::delayDeparture(hg.m_route[vod2], hg.m_data[vod2]);
 
     hg.tourConstruct();
     hg.updateTotalVio();
@@ -388,8 +388,8 @@ HGAGenome HGAGenome::ShakingExchangeSegments(HGAGenome& hgenome, unsigned int k,
     hg.m_route[vod1].clear();
     hg.m_route[vod1] = firstHead;
 
-    HGAGenome::updateInfo(hg.m_route[vod1], hg.m_data[vod1]);
-    HGAGenome::updateInfo(hg.m_route[vod2], hg.m_data[vod2]);
+    HGAGenome::delayDeparture(hg.m_route[vod1], hg.m_data[vod1]);
+    HGAGenome::delayDeparture(hg.m_route[vod2], hg.m_data[vod2]);
 
     hg.tourConstruct();
     hg.updateTotalVio();

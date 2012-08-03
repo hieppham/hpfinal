@@ -350,7 +350,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
         tempRoute = hg.m_route[newVod];
 
         Route bkpVodRoute = hg.m_route[newVod];
-        HGAGenome::updateInfo(tempRoute, hg.m_data[newVod]);
+        HGAGenome::delayDeparture(tempRoute, hg.m_data[newVod]);
 
         minObj = hg.m_data[newVod]->cost;
 
@@ -372,7 +372,7 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
             tempRoute.push_back(vChoice);
             tempRoute.splice(tempRoute.end(), hg.m_route[newVod], hg.m_route[newVod].begin(), hg.m_route[newVod].end());
 
-            HGAGenome::updateInfo(tempRoute, hg.m_data[newVod]);
+            HGAGenome::delayDeparture(tempRoute, hg.m_data[newVod]);
 
             double newObjVal = hg.m_data[newVod]->cost;
             if (hg.m_data[newVod]->load > HPGV::maxLoad){
@@ -403,8 +403,8 @@ bool HGAGenome::UTSNeighborByRouting(HGAGenome& hg, TabuMap& g_tabu, vector<vect
                 break;
             }
         }
-        HGAGenome::updateInfo(hg.m_route[vod], hg.m_data[vod]);
-        HGAGenome::updateInfo(hg.m_route[newVod], hg.m_data[newVod]);
+        HGAGenome::delayDeparture(hg.m_route[vod], hg.m_data[vod]);
+        HGAGenome::delayDeparture(hg.m_route[newVod], hg.m_data[newVod]);
 
         hg.tourUpdate(pFreq);
         hg.updateTotalVio();

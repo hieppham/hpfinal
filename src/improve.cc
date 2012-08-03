@@ -60,7 +60,12 @@ void HGAGenome::delayDeparture(Route& mRoute, RinfoPtr& mRinfo){
             (*uIter)->timeArrive = (*prevCus)->timeDeparture + HPGV::gDistance[(*prevCus)->cus->id][(*uIter)->cus->id];
             mRinfo->cost += HPGV::gDistance[(*prevCus)->cus->id][(*uIter)->cus->id];
         }
-        (*uIter)->timeStartService = max((double)(*uIter)->cus->e, (*uIter)->timeArrive);
+        if ((double)(*uIter)->cus->e > (*uIter)->timeArrive){
+            (*uIter)->timeStartService = (double)(*uIter)->cus->e;
+        }else{
+            (*uIter)->timeStartService = (*uIter)->timeArrive;
+        }
+
         (*uIter)->timeWait = (*uIter)->timeStartService - (*uIter)->timeArrive;
         (*uIter)->timeDeparture = (*uIter)->timeStartService + (double)(*uIter)->cus->d;
 
