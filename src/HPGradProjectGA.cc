@@ -61,11 +61,15 @@ HPGradProjectGA::step()
         mom = &(pop->select());
         stats.numsel += 1;
         tmpPop->individual(i).copy(*mom);
-        HGAGenome::UTS((HGAGenome&)tmpPop->individual(i));
-        HGAGenome::improveRoute((HGAGenome&)tmpPop->individual(i));
+        HGAGenome & tmpHg = (HGAGenome&)tmpPop->individual(i);
+        HGAGenome & tmpMom = (HGAGenome&)mom;
+        HGAGenome::UTS(tmpHg);
+        HGAGenome::improveRoute(tmpHg);
 
-        // HGAGenome::Initializer(tmpPop->individual(i));
-        // HGAGenome::Education(tmpPop->individual( i ), CNG);
+        if (tmpHg.durationCost <= tmpMom.durationCost){
+            HGAGenome::Initializer(tmpPop->individual(i));
+            HGAGenome::Education(tmpPop->individual( i ), CNG);
+        }
 
         stats.numeval += 1;
     }
