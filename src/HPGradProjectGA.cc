@@ -62,7 +62,7 @@ HPGradProjectGA::step()
         stats.numsel += 1;
         tmpPop->individual(i).copy(*mom);
         HGAGenome & tmpHg = (HGAGenome&)tmpPop->individual(i);
-        HGAGenome & tmpMom = (HGAGenome&)(*mom);
+        HGAGenome & tmpMom = (HGAGenome&) (*mom);
         HGAGenome::UTS(tmpHg);
         HGAGenome::improveRoute(tmpHg);
 
@@ -77,15 +77,15 @@ HPGradProjectGA::step()
     for(i=0; i<tmpPop->size(); i++)
             pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
     // Replace the worst genomes in the main population with all of the individuals
-    // we just created.  Notice that we invoke the population's add member with a
-    // genome pointer rather than reference.  This way we don't force a clone of
-    // the genome - we just let the population take over.  Then we take it back by
-    // doing a remove then a replace in the tmp population.
+    // we just created.
 
     for (i=0; i<tmpPop->size(); i++){
         pop->add(tmpPop->individual(i));
     }
-    pop->evaluate(gaTrue);      // get info about current pop for next time
+    for (int i = 0; i < pop->size(); i++){
+        pop->individual(i).evaluate(gaTrue);
+    }
+    // pop->evaluate(gaTrue);      // get info about current pop for next time
 
     // update penalty parameters
     /*
