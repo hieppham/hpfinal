@@ -8,7 +8,7 @@
 # data modified by the first (the parameters are applied in the order they 
 # are listed).
 
-population_size		300
+population_size		200
 mutation_probability	0.05
 crossover_probability	1
 score_filename		bog1.dat

@@ -12,9 +12,15 @@ RouteInfo::RouteInfo() {
     load = 0;
     timeVio = 0;
     timeLeaveDepot = 0;
-
+    FTS0 = 0;
 }
-
+void RouteInfo::copy(const RouteInfo & orig){
+    cost = orig.cost;
+    load = orig.load;
+    timeLeaveDepot = orig.timeLeaveDepot;
+    timeVio = orig.timeVio;
+    FTS0 = orig.FTS0;
+}
 RouteInfo::~RouteInfo() {
 }
 

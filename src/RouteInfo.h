@@ -18,7 +18,15 @@ public:
     double FTS0;
 public:
     RouteInfo();
+    RouteInfo(const RouteInfo & orig){
+        copy(orig);
+    }
     virtual ~RouteInfo();
+    virtual void copy(const RouteInfo & orig);
+    RouteInfo operator=(const RouteInfo & arg) {
+        copy(arg);
+        return *this;
+    }
     void resetAll(void);
 };
 

@@ -111,7 +111,7 @@ void HGAGenome::insertIntoRoute(Route& mRoute, RinfoPtr& mRinfo, Customer*& mCus
         VertexPtr vToPush(new Vertex(mCus));
         mRoute.insert(pos, vToPush);
         pos--;
-        HGAGenome::updateInfo(mRoute, mRinfo);
+        HGAGenome::delayDeparture(mRoute, mRinfo);
     }
 }
 /**
@@ -520,7 +520,7 @@ void HGAGenome::removeFromRoute(Route& mRoute, RinfoPtr& mRinfo, unsigned int id
         }
     }
     // update information
-    HGAGenome::updateInfo(mRoute, mRinfo);
+    HGAGenome::delayDeparture(mRoute, mRinfo);
 }
 
 void HGAGenome::tourConstruct(void){
