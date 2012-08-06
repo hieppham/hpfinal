@@ -7,7 +7,7 @@
 
 #include "HPGradProjectGA.h"
 
-extern HGAGenome bestSol;
+// extern HGAGenome bestSol;
 
 void
 HPGradProjectGA::step()
@@ -103,6 +103,9 @@ HPGradProjectGA::step()
         }
     }
     */
+
+    pop->scale(gaTrue);         // remind the population to do its scaling
+
     if (HPGV::bestFeasibleCost != 0){
         HPGV::hPenalty = HPGV::bestFeasibleCost;
     }else{
@@ -115,7 +118,7 @@ HPGradProjectGA::step()
     HPGV::avgW = 0;
     for (int i = 0; i < pop->size(); i++){
         HGAGenome& tmpHg = (HGAGenome &) (pop->individual(i));
-        cout << HPGV::genCounter << " - " << tmpHg.durationCost << endl;
+        cout << HPGV::genCounter << " - " << tmpHg.durationCost << " - " << tmpHg.fitness() << endl;
 
         HPGV::avgQ += tmpHg.totalCapacityVio;
         HPGV::avgD += tmpHg.totalDurationVio;
@@ -124,8 +127,6 @@ HPGradProjectGA::step()
     HPGV::avgQ /= (pop->size());
     HPGV::avgD /= (pop->size());
     HPGV::avgW /= (pop->size());
-
-    pop->scale(gaTrue);         // remind the population to do its scaling
 
     stats.numrep += tmpPop->size();
 
