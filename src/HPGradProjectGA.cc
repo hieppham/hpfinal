@@ -74,8 +74,9 @@ HPGradProjectGA::step()
         stats.numeval += 1;
     }
 
-//    for(i=0; i<tmpPop->size(); i++)
-//            pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
+    for(i=0; i<tmpPop->size(); i++){
+        pop->destroy(GAPopulation::WORST, GAPopulation::SCALED);
+    }
     // Replace the worst genomes in the main population with all of the individuals
     // we just created.
 
@@ -130,9 +131,9 @@ HPGradProjectGA::step()
 
     stats.numrep += tmpPop->size();
 
-    for(i=0; i<tmpPop->size(); i++){
-        pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
-    }
+//    for(i=0; i<tmpPop->size(); i++){
+//        pop->remove(GAPopulation::WORST, GAPopulation::SCALED);
+//    }
 
     stats.update(*pop);       // update the statistics by one generation
 }
