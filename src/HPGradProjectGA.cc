@@ -106,6 +106,7 @@ HPGradProjectGA::step()
     */
 
     pop->scale(gaTrue);         // remind the population to do its scaling
+    pop->sort(gaTrue, GAPopulation::SCALED); // sort the population with new individuals added
 
     if (HPGV::bestFeasibleCost != 0){
         HPGV::hPenalty = HPGV::bestFeasibleCost;
