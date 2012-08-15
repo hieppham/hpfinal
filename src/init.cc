@@ -91,7 +91,7 @@ void HGAGenome::initCluster(unsigned int& iDay, Route& mRoute, VCus& mCluster, R
     if (mCluster.empty()){
         return;
     }
-    sort(mCluster.begin(), mCluster.end(), compareEndingTime);
+    sort(mCluster.begin(), mCluster.end(), endingTimeLess());
     HGAGenome::pushbackRoute(mRoute, mRinfo, mCluster.back());
     mCluster.pop_back();
 
