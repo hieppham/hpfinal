@@ -187,6 +187,7 @@ void HGAGenome::clusterFirstInit(VCus& refArr){
         // finish routing and calculate duration cost
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
+            HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
         }
     }
 }
@@ -231,6 +232,51 @@ void HGAGenome::SolomonTONNInit(VCus& refArr){
         // finish routing and calculate duration cost
         for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
             vod = iDay * HPGV::mVeh + iVeh;
+            HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
+        }
+    }
+}
+
+void HGAGenome::PRInit(VCus& refArr){
+    unsigned int iDay = 0;
+    unsigned int iVeh = 0;
+    unsigned int vod = 0;
+    VCus cloneArr(0);
+
+    for (iDay = 0; iDay < HPGV::tDay; iDay++){
+        // solve VRPTW for each day
+        cloneArr.clear();
+        cloneArr = refArr;
+        VCus::iterator skipCus;
+        // check patterns and remove all customers that should not be visited on current day
+        // of course, we also remove all customers that has been satisfied
+        for (skipCus = cloneArr.begin(); skipCus != cloneArr.end();
+                ++skipCus) {
+            if ((*skipCus)->isServiced) {
+                cloneArr.erase(skipCus);
+                skipCus--;
+                continue;
+            }
+            int flag = (int) pow(2, (double) (HPGV::tDay - iDay - 1));
+            flag &= (*skipCus)->pattern;
+            if (flag == 0) {
+                cloneArr.erase(skipCus);
+                skipCus--;
+            }
+        }
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            RinfoPtr nDat(new RouteInfo());
+            this->m_data[vod] = nDat;
+            this->m_route[vod].clear();
+            // HGAGenome::initSolomon(iDay, this->m_route[vod], cloneArr, this->m_data[vod]);
+        }
+        // All routes have been initialized, so we should check if any customer left
+        HGAGenome::PRheuristic(this->m_route, this->m_data, cloneArr, iDay, true);
+        // finish routing and calculate duration cost
+        for (iVeh = 0; iVeh < HPGV::mVeh; iVeh++){
+            vod = iDay * HPGV::mVeh + iVeh;
+            HGAGenome::delayDeparture(this->m_route[vod], this->m_data[vod]);
         }
     }
 }

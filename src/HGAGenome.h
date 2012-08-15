@@ -66,6 +66,7 @@ public:
 public:
     void clusterFirstInit(VCus&);
     void SolomonTONNInit(VCus&);
+    void PRInit(VCus&);
     static void initCluster(unsigned int&, Route&, VCus&, RinfoPtr&);
     static void initSolomon(unsigned int&, Route&, VCus&, RinfoPtr&);
 

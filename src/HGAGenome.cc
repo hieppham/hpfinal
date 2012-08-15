@@ -36,11 +36,15 @@ void HGAGenome::Initializer(GAGenome& g) {
         hg.arrC[ic].randomAssignedPattern(idx);
         refArr[ic] = &(hg.arrC[ic]);
     }
-    int randType = GARandomInt(1, 3);
-    if (randType > 1){
+    int randType = GARandomInt(1, 5);
+    if (randType > 2){
         hg.clusterFirstInit(refArr);
     }else{
-        hg.SolomonTONNInit(refArr);
+        if (randType == 1){
+            hg.SolomonTONNInit(refArr);
+        }else{
+            hg.PRInit(refArr);
+        }
     }
 
     hg.tourConstruct();
